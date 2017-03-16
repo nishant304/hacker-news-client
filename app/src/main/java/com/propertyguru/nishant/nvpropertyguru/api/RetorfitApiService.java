@@ -12,7 +12,7 @@ import retrofit2.http.Path;
  * Created by nishant on 15.03.17.
  */
 
-public interface RetorfitApiService extends ApiService {
+public interface RetorfitApiService  {
 
     @GET("v0/topstories.json")
     public Call<List<Integer>> getStoryIds();

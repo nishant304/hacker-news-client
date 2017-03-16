@@ -9,6 +9,7 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -18,6 +19,8 @@ android {
         }
     }
 }
+
+apply plugin: 'com.google.gms.google-services'
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -31,9 +34,11 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
     compile 'org.jdeferred:jdeferred-android-aar:1.2.3'
     compile 'com.google.firebase:firebase-database:10.0.1'
+    compile 'io.reactivex:rxjava:1.1.0'
 
 
     testCompile 'junit:junit:4.12'
 
     compile 'com.android.support:recyclerview-v7:25.2.0'
 }
+

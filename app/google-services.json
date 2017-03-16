@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "706797250421",
+    "firebase_url": "https://hacker-news.firebaseio.com",
+    "project_id": "nvpropertyguru",
+    "storage_bucket": "nvpropertyguru.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:706797250421:android:446d471680453eff",
+        "android_client_info": {
+          "package_name": "com.propertyguru.nishant.nvpropertyguru"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "706797250421-27edog0lbhqethvdpo0ej4uj1nl2tvmu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.propertyguru.nishant.nvpropertyguru",
+            "certificate_hash": "27a253d1e565eeb9c35c8c4a22125f70c328af0a"
+          }
+        },
+        {
+          "client_id": "706797250421-5b6jhb68au278r60tmqvd059h704ebgt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC7fgc2CbeEYHJ6Fwo00yp_qCNu44Mbcs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "706797250421-5b6jhb68au278r60tmqvd059h704ebgt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

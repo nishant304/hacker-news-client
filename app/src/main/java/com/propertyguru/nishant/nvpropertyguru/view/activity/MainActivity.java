@@ -50,9 +50,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         list.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Story>>() {
             @Override
             public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-                if(changeSet != null) {
-                    storyAdapter.notifyDataSetChanged();
-                }
+                    System.out.println("data changed");
+                    //storyAdapter.notifyDataSetChanged();
+                storyAdapter.notifyItemRangeInserted(storyAdapter.getItemCount()-1,8);
             }
         });
         storyAdapter = new StoryAdapter(this,list);
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
 
-            if(dy>0 && !loading && 2*visibleItems + firstVisibleItem >= totalItems){
+            if(dy>0 && !loading && visibleItems + firstVisibleItem >= totalItems){
                 loading = true;
                 StoryController.fetchMore(new StoryController.StoryFetchListener() {
                     @Override

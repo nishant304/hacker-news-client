@@ -77,7 +77,7 @@ public class StoryController {
             public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
                 result.removeAllChangeListeners();
                 List<Integer> req = new ArrayList<Integer>();
-                for(int i =0;i< Math.min(15,collection.size());i++){
+                for(int i =0;i< Math.min(8,collection.size());i++){
                     req.add(collection.get(i).getId());
                 }
                 BatchRequest.getAllStoriesForIds(req,storyFetchListener);

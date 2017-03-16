@@ -24,10 +24,16 @@ public class FirebaseImpl implements FirebaseApiService {
 
     private static final String BASE_URL = "https://hacker-news.firebaseio.com";
 
+    private DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReferenceFromUrl(BASE_URL);
+
+    public static FirebaseImpl getFirebase() {
+        return firebase;
+    }
+
+    private static FirebaseImpl firebase = new FirebaseImpl();
+
     @Override
     public void getStoryIds(final ResponseListener<List<Integer>> listener) {
-
-        DatabaseReference firebaseDatabase = FirebaseDatabase.getInstance().getReference(BASE_URL);
         firebaseDatabase.child("v0").child("topstories").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -43,8 +49,18 @@ public class FirebaseImpl implements FirebaseApiService {
     }
 
     @Override
-    public void getStory(int id, ResponseListener<Story> responseListener) {
+    public void getStory(int id, final ResponseListener<Story> responseListener) {
+          firebaseDatabase.child("v0").child("item").child(id+"").addValueEventListener(new ValueEventListener() {
+              @Override
+              public void onDataChange(DataSnapshot dataSnapshot) {
+                    responseListener.onSuccess((Story) dataSnapshot.getValue(Story.class));
+              }
 
+              @Override
+              public void onCancelled(DatabaseError databaseError) {
+                    responseListener.onError(new Exception(databaseError.getMessage()));
+              }
+          });
     }
 
 }

@@ -4,7 +4,10 @@ import com.propertyguru.nishant.nvpropertyguru.api.RetorfitApiService;
 import com.propertyguru.nishant.nvpropertyguru.controller.StoryController;
 import com.propertyguru.nishant.nvpropertyguru.model.Stories;
 import com.propertyguru.nishant.nvpropertyguru.model.Story;
+import com.propertyguru.nishant.nvpropertyguru.network.FirebaseImpl;
+import com.propertyguru.nishant.nvpropertyguru.network.ResponseListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
@@ -21,6 +24,9 @@ public class BatchRequest<T> {
     int reqCount ;
     private Object lock = new Object();
 
+
+    private ArrayList<Story> response = new ArrayList<>();
+
     private StoryController.StoryFetchListener storyFetchListener;
 
     public BatchRequest(List<Integer> list, StoryController.StoryFetchListener storyFetchListener){
@@ -28,52 +34,50 @@ public class BatchRequest<T> {
         reqCount = list.size();
         this.storyFetchListener = storyFetchListener;
         for(Integer id:list) {
-            Call<Story> storyCall = retorfitApiService.getStory(id);
-            storyCall.enqueue(story);
+            FirebaseImpl.getFirebase().getStory(id,resp);
         }
     }
 
-    private Callback<Story> story = new Callback<Story>() {
+    private ResponseListener<Story> resp = new ResponseListener<Story>() {
         @Override
-        public void onResponse(Call<Story> call, Response<Story> response) {
-            final Story s = (Story) response.body();
-               addToDb(s.getId(),true);
-               synchronized (lock){
-                   reqCount--;
-                   if(reqCount == 0){
-                        storyFetchListener.onStoryFetched();
-                   }
-
-                   Realm.getInstance(App.getConfig()).executeTransaction(new Realm.Transaction() {
-                       @Override
-                       public void execute(Realm realm) {
-                           try {
-                               realm.copyToRealm(s);
-                           }catch (Exception e){
-                           }
-                       }
-                   });
-
-
-
-               }
-        }
-
-        @Override
-        public void onFailure(Call<Story> call, Throwable t) {
-            synchronized (lock){
+        public void onSuccess(final Story s) {
+            addToDb(s.getId(), true);
+            synchronized (lock) {
                 reqCount--;
-                if(reqCount == 0){
+                if (reqCount == 0) {
+                    commit();
                     storyFetchListener.onStoryFetched();
+                }else{
+                   response.add(s);
                 }
             }
         }
+
+        @Override
+        public void onError(Exception ex) {
+                synchronized (lock){
+                    reqCount--;
+                    if(reqCount == 0){
+                        commit();
+                        storyFetchListener.onStoryFetched();
+                    }
+                }
+        }
     };
+
+    private  void commit(){
+        Realm realm = Realm.getInstance(App.getConfig());
+        realm.beginTransaction();
+        for(int i=0;i<response.size();i++){
+            realm.copyToRealm(response.get(i));
+            System.out.println("data changed from copy");
+        }
+        realm.commitTransaction();
+    }
 
     public  static  BatchRequest<Story> getAllStoriesForIds(List<Integer> list, StoryController.StoryFetchListener storyFetchListener){
         return new BatchRequest<Story>(list, storyFetchListener );
     }
-
 
     public  static void addToDb(final int id,final boolean isFetched){
         Realm.getInstance(App.getConfig()).executeTransaction(new Realm.Transaction() {

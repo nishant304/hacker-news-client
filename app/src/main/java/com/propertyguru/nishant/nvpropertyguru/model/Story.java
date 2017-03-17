@@ -10,6 +10,8 @@ import io.realm.annotations.PrimaryKey;
  */
 
 import java.util.List;
+
+import com.google.firebase.database.Exclude;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -44,6 +46,17 @@ public class Story extends RealmObject {
     @SerializedName("type")
     @Expose
     private String type;
+
+    @Exclude
+    private int rank ;
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
 
     public String getBy() {
         return by;

@@ -1,5 +1,6 @@
 package com.propertyguru.nishant.nvpropertyguru.view.activity;
 
+import android.os.PersistableBundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -27,60 +28,43 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private LinearLayoutManager layoutManager;
 
+    private StoryController storyController;
+
+    int pos ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if(savedInstanceState!=null){
+            pos = savedInstanceState.getInt("pos");
+        }
         SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
-        //swipeRefreshLayout.setOnRefreshListener(this);
+        swipeRefreshLayout.setOnRefreshListener(this);
+
+        storyController = StoryController.getInstance(getFragmentManager());
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerView.addOnScrollListener(new ScrollListener());
+        recyclerView.addOnScrollListener(storyController.scrollListener);
+        storyAdapter = new StoryAdapter(this,storyController.getStories());
+        recyclerView.setAdapter(storyAdapter);
+    }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+        recyclerView.setLayoutManager(storyController.layoutManager);
+        storyController.layoutManager.scrollToPosition(pos);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt("pos",storyController.layoutManager.findFirstVisibleItemPosition());
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onRefresh() {
-        //StoryController.fetchLatest();
+        storyController.fetchLatest();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        StoryController.fetchOnCreate();
-        RealmResults<Story> list = Realm.getInstance(App.getConfig()).where(Story.class).findAllAsync();
-        list.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Story>>() {
-            @Override
-            public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-                    System.out.println("data changed");
-                    //storyAdapter.notifyDataSetChanged();
-                storyAdapter.notifyItemRangeInserted(storyAdapter.getItemCount()-1,8);
-            }
-        });
-        storyAdapter = new StoryAdapter(this,list);
-        recyclerView.setAdapter(storyAdapter);
-        layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-    }
-
-    private  class ScrollListener extends RecyclerView.OnScrollListener {
-
-        private boolean loading;
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            int visibleItems = layoutManager.getChildCount();
-            int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
-            int totalItems = layoutManager.getItemCount();
-
-            if(dy>0 && !loading && visibleItems + firstVisibleItem >= totalItems){
-                loading = true;
-                StoryController.fetchMore(new StoryController.StoryFetchListener() {
-                    @Override
-                    public void onStoryFetched() {
-                        loading = false;
-                    }
-                });
-            }
-        }
-
-    }
 }

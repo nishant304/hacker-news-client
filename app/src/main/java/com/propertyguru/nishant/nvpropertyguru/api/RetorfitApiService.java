@@ -15,9 +15,9 @@ import retrofit2.http.Path;
 public interface RetorfitApiService  {
 
     @GET("v0/topstories.json")
-    public Call<List<Integer>> getStoryIds();
+    public Call<List<Long>> getStoryIds();
 
     @GET("v0/item/{id}.json")
-    public Call<Story> getStory(@Path("id") int id);
+    public Call<Story> getStory(@Path("id") long id);
 
 }

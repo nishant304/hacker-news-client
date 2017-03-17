@@ -12,6 +12,9 @@ import com.propertyguru.nishant.nvpropertyguru.model.Story;
 
 import org.w3c.dom.Text;
 
+import io.realm.OrderedCollectionChangeSet;
+import io.realm.OrderedRealmCollection;
+import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
@@ -19,15 +22,16 @@ import io.realm.RealmResults;
  * Created by nishant on 15.03.17.
  */
 
-public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder> {
+public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder> implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
 
     private LayoutInflater inflater;
 
-    RealmResults<Story> itemList;
+    private RealmResults<Story> itemList;
 
     public StoryAdapter(Context context, RealmResults<Story> itemList){
         inflater = LayoutInflater.from(context);
         this.itemList = itemList;
+        this.itemList.addChangeListener(this);
     }
 
     @Override
@@ -58,6 +62,22 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             time = (TextView) view.findViewById(R.id.storyTime);
         }
 
+    }
+
+    @Override
+    public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
+        if(changeSet != null){
+            notifyItemRangeInserted(changeSet.getInsertionRanges()[0].startIndex,
+                    changeSet.getInsertionRanges()[0].length);
+        }else{
+            notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        itemList.removeAllChangeListeners();
     }
 
 }

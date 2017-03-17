@@ -1,12 +1,27 @@
 package com.propertyguru.nishant.nvpropertyguru.controller;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.content.Context;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+
 import com.propertyguru.nishant.nvpropertyguru.App;
 import com.propertyguru.nishant.nvpropertyguru.BatchRequest;
+import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
 import com.propertyguru.nishant.nvpropertyguru.api.RetorfitApiService;
+import com.propertyguru.nishant.nvpropertyguru.dao.SotryDao;
 import com.propertyguru.nishant.nvpropertyguru.model.Stories;
 import com.propertyguru.nishant.nvpropertyguru.model.Story;
+import com.propertyguru.nishant.nvpropertyguru.model.UpdateStory;
+import com.propertyguru.nishant.nvpropertyguru.network.FireBaseImpl;
+import com.propertyguru.nishant.nvpropertyguru.network.ResponseListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -22,112 +37,167 @@ import retrofit2.Response;
  * Created by nishant on 15.03.17.
  */
 
-public class StoryController {
+public class StoryController extends Fragment {
 
-    static CountDownLatch latch ;
+    public static final String TAG = StoryController.class.getSimpleName();
 
-    public static void fetchOnCreate(){
+    private ApiService apiService = FireBaseImpl.getInstance();
+
+    public LinearLayoutManager layoutManager ;
+
+    private RealmResults<Story> sotries;
+
+    public static StoryController getInstance(@NonNull FragmentManager fragmentManager) {
+        StoryController storyController = (StoryController) fragmentManager.findFragmentByTag(TAG);
+        if (storyController == null) {
+            storyController = new StoryController();
+            fragmentManager.beginTransaction().add(storyController, TAG).commit();
+        }
+        return storyController;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        layoutManager = new LinearLayoutManager(context);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+        fetchOnCreate();
+    }
+
+    public RealmResults<Story> getStories() {
+        if (sotries == null) {
+            sotries = Realm.getInstance(App.getConfig()).where(Story.class).findAllAsync();
+        }
+        return sotries;
+    }
+
+    public void fetchOnCreate() {
         RealmResults<Stories> result = Realm.getInstance(App.getConfig())
-                .where(Stories.class).equalTo("isFetched",true).findAllAsync();
+                .where(Stories.class).equalTo("isFetched", true).findAllAsync();
         result.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Stories>>() {
             @Override
             public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
-                if(collection.size() ==0) {
+                if (collection.size() == 0) {
                     fetchFromNetwork();
                 }
             }
         });
     }
 
-    public static void fetchLatest(){
+    public void fetchLatest() {
         fetchFromNetwork();
     }
 
+    private ResponseListener<List<Long>> storiesResponseListener = new ResponseListener<List<Long>>() {
+        @Override
+        public void onSuccess(List<Long> list) {
 
-    private static void fetchFromNetwork(){
-        final RetorfitApiService retorfitApiService = App.getRetrofit().create(RetorfitApiService.class);
-        Call<List<Integer>> call =  retorfitApiService.getStoryIds();
-        call.enqueue(new Callback<List<Integer>>() {
-            @Override
-            public void onResponse(Call<List<Integer>> call, Response<List<Integer>> response) {
-                ArrayList<Integer> list = (ArrayList<Integer>) response.body();
-                int  i =0;
-                for( ;i<Math.min(15,list.size());i++){
-                    getStoryForId(list.get(i),new CountDownLatch(1));
+            if(sotries != null &&sotries.size() !=0){
+                List<UpdateStory> updateStoryList = new ArrayList<>();
+                   for(int i=0;i<Math.min(list.size(),sotries.size());i++){
+                        if(sotries.get(i).getId() != list.get(i)){
+                            updateStoryList.add(new UpdateStory(sotries.get(i),i,list.get(i)));
+                        }
+                   }
+                SotryDao.updateNewList(updateStoryList);
+
+            }else {
+                int i = 0;
+                ArrayList<Long> res = new ArrayList<>();
+                for (; i < Math.min(15, list.size()); i++) {
+                    res.add(list.get(i));
                 }
 
-                for( ;i<list.size();i++){
-                    addToDb(list.get(i),false);
+                BatchRequest.getAllStoriesForIds(res, new StoryFetchListener() {
+                    @Override
+                    public void onStoryFetched() {
+
+                    }
+                });
+
+                ArrayList<Long> rem = new ArrayList<>();
+                for (; i < list.size(); i++) {
+                    rem.add(list.get(i));
                 }
+                addToDb(rem, false);
             }
 
-            @Override
-            public void onFailure(Call<List<Integer>> call, Throwable t) {
+        }
 
-            }
-        });
+        @Override
+        public void onError(Exception ex) {
+
+        }
+    };
+
+    private void fetchFromNetwork() {
+        apiService.getStoryIds(storiesResponseListener);
     }
 
-    public  static  void fetchMore(final StoryFetchListener storyFetchListener){
+    public static void fetchMore(final StoryFetchListener storyFetchListener) {
 
         final RealmResults<Stories> result = Realm.getInstance(App.getConfig())
-                .where(Stories.class).equalTo("isFetched",false).findAllAsync();
+                .where(Stories.class).equalTo("isFetched", false).findAllAsync();
         result.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Stories>>() {
             @Override
             public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
                 result.removeAllChangeListeners();
-                List<Integer> req = new ArrayList<Integer>();
-                for(int i =0;i< Math.min(8,collection.size());i++){
+                if(collection.size() == 0){
+                    storyFetchListener.onStoryFetched();
+                    return;
+                }
+                List<Long> req = new ArrayList<Long>();
+                for (int i = 0; i < Math.min(8, collection.size()); i++) {
                     req.add(collection.get(i).getId());
                 }
-                BatchRequest.getAllStoriesForIds(req,storyFetchListener);
+                BatchRequest.getAllStoriesForIds(req, storyFetchListener);
             }
         });
     }
 
-    public  static void addToDb(final int id,final boolean isFetched){
-        Realm.getInstance(App.getConfig()).executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                Stories stories = realm.where(Stories.class).equalTo("id",id).findFirst();
-                if(stories == null) {
-                    stories = realm.createObject(Stories.class,id);
-                }
-                stories.setFetched(isFetched);
-            }
-        });
-    }
+    public RecyclerView.OnScrollListener scrollListener = new  RecyclerView.OnScrollListener() {
 
-    private static void getStoryForId(final int id, final CountDownLatch latch){
-        RetorfitApiService retorfitApiService = App.getRetrofit().create(RetorfitApiService.class);
-        Call<Story> storyCall = retorfitApiService.getStory(id);
-        storyCall.enqueue(new Callback<Story>() {
-            @Override
-            public void onResponse(Call<Story> call, final Response<Story> response) {
-                addToDb(id,true);
+        private boolean loading;
 
-                Realm.getInstance(App.getConfig()).executeTransaction(new Realm.Transaction() {
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            int visibleItems = layoutManager.getChildCount();
+            int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+            int totalItems = layoutManager.getItemCount();
+
+            if(dy>0 && !loading && visibleItems + firstVisibleItem >= totalItems){
+                loading = true;
+                fetchMore(new StoryController.StoryFetchListener() {
                     @Override
-                    public void execute(Realm realm) {
-                        try {
-                            realm.copyToRealm((Story) response.body());
-                            latch.countDown();
-                        }catch (Exception e){
-                            latch.countDown();
-                        }
+                    public void onStoryFetched() {
+                        loading = false;
                     }
                 });
             }
+        }
+    };
 
+    public static void addToDb(final List<Long> list, final boolean isFetched) {
+        Realm.getInstance(App.getConfig()).executeTransactionAsync(new Realm.Transaction() {
             @Override
-            public void onFailure(Call<Story> call, Throwable t) {
-                addToDb(id,false);
-                latch.countDown();
+            public void execute(Realm realm) {
+                for (Long id : list) {
+                    Stories stories = realm.where(Stories.class).equalTo("id", id).findFirst();
+                    if (stories == null) {
+                        stories = realm.createObject(Stories.class, id);
+                        stories.setFetched(false);
+                    }
+                }
             }
         });
     }
 
-    public interface StoryFetchListener{
+    public interface StoryFetchListener {
         void onStoryFetched();
     }
 

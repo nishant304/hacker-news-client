@@ -14,15 +14,15 @@ import io.realm.annotations.PrimaryKey;
 public class Stories extends RealmObject {
 
     @PrimaryKey
-    private Integer id;
+    private Long id;
 
     private boolean isFetched ;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

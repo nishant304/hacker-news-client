@@ -66,7 +66,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-        if(changeSet != null){
+        if(changeSet != null && changeSet.getInsertionRanges().length>0){
             notifyItemRangeInserted(changeSet.getInsertionRanges()[0].startIndex,
                     changeSet.getInsertionRanges()[0].length);
         }else{

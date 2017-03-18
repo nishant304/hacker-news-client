@@ -3,6 +3,8 @@ package com.propertyguru.nishant.nvpropertyguru;
 import android.app.Application;
 
 import com.google.firebase.FirebaseApp;
+import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
+import com.propertyguru.nishant.nvpropertyguru.network.FireBaseImpl;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -21,6 +23,10 @@ public class App extends Application {
 
     private static  RealmConfiguration config;
 
+    private static ApiService apiService ;
+
+    private static Realm realm;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -32,6 +38,9 @@ public class App extends Application {
                 .build();
         config = new RealmConfiguration.Builder().deleteRealmIfMigrationNeeded()
                 .build();
+
+        apiService = FireBaseImpl.getInstance();
+        realm = Realm.getInstance(getConfig());
     }
 
     public static Retrofit getRetrofit() {
@@ -41,4 +50,13 @@ public class App extends Application {
     public  static RealmConfiguration getConfig(){
         return config;
     }
+
+    public static ApiService getApiService() {
+        return apiService;
+    }
+
+    public static Realm getRealm() {
+        return realm;
+    }
+
 }

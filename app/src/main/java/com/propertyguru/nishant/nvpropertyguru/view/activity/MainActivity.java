@@ -1,26 +1,16 @@
 package com.propertyguru.nishant.nvpropertyguru.view.activity;
 
-import android.os.PersistableBundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 
-import com.propertyguru.nishant.nvpropertyguru.App;
 import com.propertyguru.nishant.nvpropertyguru.R;
 import com.propertyguru.nishant.nvpropertyguru.controller.StoryController;
-import com.propertyguru.nishant.nvpropertyguru.model.Story;
 import com.propertyguru.nishant.nvpropertyguru.view.adapter.StoryAdapter;
 
-import io.realm.OrderedCollectionChangeSet;
-import io.realm.OrderedRealmCollectionChangeListener;
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmResults;
-
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,StoryController.OnDataLoadListener {
 
     private RecyclerView recyclerView;
 
@@ -32,6 +22,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     int pos ;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if(savedInstanceState!=null){
             pos = savedInstanceState.getInt("pos");
         }
-        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
         swipeRefreshLayout.setOnRefreshListener(this);
 
         storyController = StoryController.getInstance(getFragmentManager());
@@ -64,7 +56,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void onRefresh() {
-        storyController.fetchLatest();
+        storyController.refreshList();
     }
 
+    @Override
+    public void onDataLoaded() {
+        swipeRefreshLayout.setRefreshing(false);
+    }
 }

@@ -15,7 +15,8 @@ import com.google.firebase.database.Exclude;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Story extends RealmObject {
+public class Story extends RealmObject  {
+
 
     @SerializedName("by")
     @Expose
@@ -48,13 +49,13 @@ public class Story extends RealmObject {
     private String type;
 
     @Exclude
-    private int rank ;
+    private Integer rank ;
 
-    public int getRank() {
+    public Integer getRank() {
         return rank;
     }
 
-    public void setRank(int rank) {
+    public void setRank(Integer rank) {
         this.rank = rank;
     }
 
@@ -113,5 +114,6 @@ public class Story extends RealmObject {
     public void setTitle(String title) {
         this.title = title;
     }
+
 }
 

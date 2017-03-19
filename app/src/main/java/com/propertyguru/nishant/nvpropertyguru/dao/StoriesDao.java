@@ -17,7 +17,7 @@ public class StoriesDao {
 
     public static RealmResults<Stories> getStories(){
         return App.getRealm()
-                .where(Stories.class).findAllAsync();
+                .where(Stories.class).findAllSortedAsync("rank");
     }
 
     public static void delete(final List<Story> response) {

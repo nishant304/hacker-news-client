@@ -3,6 +3,7 @@ package com.propertyguru.nishant.nvpropertyguru;
 import android.app.Application;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
 import com.propertyguru.nishant.nvpropertyguru.network.FireBaseImpl;
 
@@ -31,6 +32,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         FirebaseApp.initializeApp(this);
+
         Realm.init(this);
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)

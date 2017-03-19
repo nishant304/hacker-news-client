@@ -23,8 +23,12 @@ public abstract class AbstractBatchRequest<T> {
     private int reqCount;
 
     public AbstractBatchRequest(@NonNull  JobCompleteListener jobCompleteListener, int reqCount){
-        if(reqCount <= 0){
-            throw new IllegalArgumentException("req count should not be zero");
+        if(reqCount < 0){
+            throw new IllegalArgumentException("req count should not be less than zero");
+        }
+
+        if(reqCount  == 0){
+            jobCompleteListener.onJobComplete(responses);
         }
 
         this.jobCompleteListener = jobCompleteListener;

@@ -14,6 +14,7 @@ import java.util.List;
 import com.google.firebase.database.Exclude;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.propertyguru.nishant.nvpropertyguru.util.RealmInteger;
 
 public class Story extends RealmObject  {
 
@@ -50,6 +51,17 @@ public class Story extends RealmObject  {
 
     @Exclude
     private Integer rank ;
+
+    public String getKid() {
+        return kid;
+    }
+
+    public void setKids(String kid) {
+        this.kid = kid;
+    }
+
+    @Exclude
+    private String kid;
 
     public Integer getRank() {
         return rank;

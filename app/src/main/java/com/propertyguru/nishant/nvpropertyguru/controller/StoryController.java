@@ -59,7 +59,7 @@ public class StoryController extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         layoutManager = new LinearLayoutManager(context);
-        loadListener = (OnDataLoadListener)context;
+        loadListener = (OnDataLoadListener) context;
     }
 
     @Override
@@ -96,9 +96,9 @@ public class StoryController extends Fragment {
         @Override
         public void onSuccess(List<Long> list) {
 
-            if(sotries.size() != 0){
+            if (sotries.size() != 0) {
                 refreshList(list);
-            }else {
+            } else {
                 firstFetch(list);
             }
         }
@@ -109,47 +109,44 @@ public class StoryController extends Fragment {
         }
     };
 
-    private void refreshList(List<Long> list){
+    private void refreshList(List<Long> list) {
         int noOfItemsChanged = getItemsChangedCount(list);
-        if(noOfItemsChanged > list.size()/2){
+        if (noOfItemsChanged > list.size() / 2) {
             App.getRealm().beginTransaction();
             App.getRealm().deleteAll();
             App.getRealm().commitTransaction();
             firstFetch(list);
-        }else{
+        } else {
             selectAndUpdate(list);
         }
     }
 
-    private void selectAndUpdate(List<Long> list){
+    private void selectAndUpdate(List<Long> list) {
         final ArrayList<Story> list1 = new ArrayList<>();
         ArrayList<Long> delayed = new ArrayList<>();
         ArrayList<Integer> ranks = new ArrayList<>();
         ArrayList<Integer> ranks1 = new ArrayList<>();
-        for(int i =0;i<Math.min(list.size(),sotries.size());i++){
-            if(sotries.get(i).getId() != list.get(i).intValue()){
-                Story story = App.getRealm().where(Story.class).equalTo("id",list.get(i).intValue()).findFirst();
+        for (int i = 0; i < Math.min(list.size(), sotries.size()); i++) {
+            if (sotries.get(i).getId() != list.get(i).intValue()) {
+                Story story = App.getRealm().where(Story.class).equalTo("id", list.get(i).intValue()).findFirst();
                 delayed.add(list.get(i));
                 ranks.add(i);
-                if(story != null){
-                   list1.add(story);
-                }            }
+                if (story != null) {
+                    list1.add(story);
+                }
+            }
         }
         StoryDao.delete(list1);
-        if(delayed.size() !=0 ) {
-            new BatchRequest(delayed, new AbstractBatchRequest.JobCompleteListener<Story>() {
-                @Override
-                public void onJobComplete(List<Story> response) {
-                    StoryDao.addnewData(response);
-                    loadListener.onDataLoaded();
-                }
-            }, ranks).start();
-        }else{
-            loadListener.onDataLoaded();
-        }
+        new BatchRequest(delayed, new AbstractBatchRequest.JobCompleteListener<Story>() {
+            @Override
+            public void onJobComplete(List<Story> response) {
+                StoryDao.addnewData(response);
+                loadListener.onDataLoaded();
+            }
+        }, ranks).start();
     }
 
-    private void firstFetch(List<Long> list){
+    private void firstFetch(List<Long> list) {
         int i = 0;
         ArrayList<Long> res = new ArrayList<>();
         ArrayList<Integer> ranks = new ArrayList<>();
@@ -174,10 +171,10 @@ public class StoryController extends Fragment {
         Stories.addToDb(rem, rankss, false);
     }
 
-    private int getItemsChangedCount(List<Long> list){
-        int itemsChanged =0 ;
-        for(int i =0;i<Math.min(list.size(),sotries.size());i++){
-            if(sotries.get(i).getId() != list.get(i).intValue()){
+    private int getItemsChangedCount(List<Long> list) {
+        int itemsChanged = 0;
+        for (int i = 0; i < Math.min(list.size(), sotries.size()); i++) {
+            if (sotries.get(i).getId() != list.get(i).intValue()) {
                 itemsChanged++;
             }
         }
@@ -188,7 +185,7 @@ public class StoryController extends Fragment {
         apiService.getStoryIds(storiesResponseListener);
     }
 
-    public  void loadMore(final AbstractBatchRequest.JobCompleteListener<Story> jobCompleteListener) {
+    public void loadMore(final AbstractBatchRequest.JobCompleteListener<Story> jobCompleteListener) {
         final RealmResults<Stories> result = StoriesDao.getStories();
         result.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Stories>>() {
             @Override
@@ -204,7 +201,7 @@ public class StoryController extends Fragment {
                     req.add(collection.get(i).getId());
                     ranks.add(collection.get(i).getRank());
                 }
-                new BatchRequest(req, jobCompleteListener,ranks).start();
+                new BatchRequest(req, jobCompleteListener, ranks).start();
             }
         });
     }
@@ -221,7 +218,7 @@ public class StoryController extends Fragment {
 
             if (dy > 0 && !loading && visibleItems + firstVisibleItem >= totalItems) {
                 loading = true;
-                loadMore(new AbstractBatchRequest.JobCompleteListener<Story>(){
+                loadMore(new AbstractBatchRequest.JobCompleteListener<Story>() {
                     @Override
                     public void onJobComplete(List<Story> response) {
                         StoryDao.addnewData(response);
@@ -233,7 +230,7 @@ public class StoryController extends Fragment {
         }
     };
 
-    public interface OnDataLoadListener{
+    public interface OnDataLoadListener {
         void onDataLoaded();
     }
 

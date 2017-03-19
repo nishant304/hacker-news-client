@@ -5,10 +5,15 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.gson.JsonArray;
 import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
 import com.propertyguru.nishant.nvpropertyguru.model.Story;
+import com.propertyguru.nishant.nvpropertyguru.util.RealmInteger;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -27,7 +32,7 @@ public class FireBaseImpl implements ApiService {
 
     private static FireBaseImpl firebase = new FireBaseImpl();
 
-    private FireBaseImpl(){
+    private FireBaseImpl() {
 
     }
 
@@ -52,20 +57,37 @@ public class FireBaseImpl implements ApiService {
 
     @Override
     public void getStory(long id, final ResponseListener<Story> responseListener) {
-        final DatabaseReference ref = firebaseDatabase.child("v0").child("item").child(id+"");
-          ref.addValueEventListener(new ValueEventListener() {
-              @Override
-              public void onDataChange(DataSnapshot dataSnapshot) {
-                    ref.removeEventListener(this);
-                    responseListener.onSuccess((Story) dataSnapshot.getValue(Story.class));
-              }
+        final DatabaseReference ref = firebaseDatabase.child("v0").child("item").child(id + "");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ref.removeEventListener(this);
+                Story story = dataSnapshot.getValue(Story.class);
+                HashMap<String, Object> hm = (HashMap<String, Object>) dataSnapshot.getValue();
+                ArrayList<Long> kids = (ArrayList<Long>) hm.get("kids");
 
-              @Override
-              public void onCancelled(DatabaseError databaseError) {
-                   ref.removeEventListener(this);
-                    responseListener.onError(new Exception(databaseError.getMessage()));
-              }
-          });
+                JsonArray jsonArray = new JsonArray();
+                if (kids != null) {
+                    for (int i = 0; i < kids.size(); i++) {
+                        jsonArray.add(kids.get(i));
+                    }
+                }
+                try {
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("kids", jsonArray);
+                    story.setKids(jsonObject.toString());
+                    responseListener.onSuccess(story);
+                }catch (Exception e){
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                ref.removeEventListener(this);
+                responseListener.onError(new Exception(databaseError.getMessage()));
+            }
+        });
     }
 
 }

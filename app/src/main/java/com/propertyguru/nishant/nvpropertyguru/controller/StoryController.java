@@ -40,8 +40,6 @@ public class StoryController extends Fragment {
 
     private ApiService apiService = FireBaseImpl.getInstance();
 
-    public LinearLayoutManager layoutManager;
-
     private RealmResults<Story> sotries;
 
     private OnDataLoadListener loadListener;
@@ -50,7 +48,8 @@ public class StoryController extends Fragment {
         StoryController storyController = (StoryController) fragmentManager.findFragmentByTag(TAG);
         if (storyController == null) {
             storyController = new StoryController();
-            fragmentManager.beginTransaction().add(storyController, TAG).commit();
+            fragmentManager
+                    .beginTransaction().add(storyController, TAG).commit();
         }
         return storyController;
     }
@@ -58,7 +57,6 @@ public class StoryController extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        layoutManager = new RobustLayoutManaget(context);
         loadListener = (OnDataLoadListener) context;
     }
 
@@ -133,65 +131,41 @@ public class StoryController extends Fragment {
         apiService.getStoryIds(storiesResponseListener);
     }
 
-    public void loadMore(final AbstractBatchRequest.JobCompleteListener<Story> jobCompleteListener) {
+    public void loadMore(final int noOfItems) {
+        if(noOfItems <= 0){
+            loadListener.onDataLoaded();
+            return;
+        }
+
         final RealmResults<Stories> result = StoriesDao.getStories();
         result.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Stories>>() {
             @Override
             public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
                 result.removeAllChangeListeners();
                 if (collection.size() == 0) {
-                    jobCompleteListener.onJobComplete(new ArrayList<Story>());
+                    loadListener.onDataLoaded();
                     return;
                 }
                 List<Long> req = new ArrayList<Long>();
                 List<Integer> ranks = new ArrayList<Integer>();
-                for (int i = 0; i < Math.min(8, collection.size()); i++) {
+                for (int i = 0; i < Math.min(noOfItems, collection.size()); i++) {
                     req.add(collection.get(i).getId());
                     ranks.add(collection.get(i).getRank());
                 }
-                new BatchRequest(req, jobCompleteListener, ranks).start();
-            }
-        });
-    }
-
-    public RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
-
-        private boolean loading;
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            int visibleItems = layoutManager.getChildCount();
-            int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
-            int totalItems = layoutManager.getItemCount();
-
-            if (dy > 0 && !loading && visibleItems + firstVisibleItem >= totalItems) {
-                loading = true;
-                loadMore(new AbstractBatchRequest.JobCompleteListener<Story>() {
+                new BatchRequest(req, new AbstractBatchRequest.JobCompleteListener<Story>() {
                     @Override
                     public void onJobComplete(List<Story> response) {
                         StoryDao.addnewData(response);
                         StoriesDao.delete(response);
-                        loading = false;
+                        loadListener.onDataLoaded();
                     }
-                });
+                }, ranks).start();
             }
-        }
-    };
+        });
+    }
 
     public interface OnDataLoadListener {
         void onDataLoaded();
-    }
-
-    private class RobustLayoutManaget extends LinearLayoutManager{
-
-        RobustLayoutManaget(Context context){
-            super(context);
-        }
-
-        @Override
-        public boolean supportsPredictiveItemAnimations() {
-            return false;
-        }
     }
 
 }

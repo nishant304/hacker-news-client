@@ -18,7 +18,7 @@ import io.realm.RealmResults;
 public class StoryDao {
 
     public static RealmResults<Story> getStoriesSortedByRank() {
-        return App.getRealm().where(Story.class).findAllSortedAsync("rank");
+        return App.getRealm().where(Story.class).equalTo("type","story").findAllSortedAsync("rank");
     }
 
     public  static  void addnewData(final List<Story> response){

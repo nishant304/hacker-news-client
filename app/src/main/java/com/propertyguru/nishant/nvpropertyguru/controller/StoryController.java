@@ -58,7 +58,7 @@ public class StoryController extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        layoutManager = new LinearLayoutManager(context);
+        layoutManager = new RobustLayoutManaget(context);
         loadListener = (OnDataLoadListener) context;
     }
 
@@ -95,12 +95,7 @@ public class StoryController extends Fragment {
     private ResponseListener<List<Long>> storiesResponseListener = new ResponseListener<List<Long>>() {
         @Override
         public void onSuccess(List<Long> list) {
-
-            if (sotries.size() != 0) {
-                refreshList(list);
-            } else {
                 firstFetch(list);
-            }
         }
 
         @Override
@@ -108,43 +103,6 @@ public class StoryController extends Fragment {
 
         }
     };
-
-    private void refreshList(List<Long> list) {
-        int noOfItemsChanged = getItemsChangedCount(list);
-        if (noOfItemsChanged > list.size() / 2) {
-            App.getRealm().beginTransaction();
-            App.getRealm().deleteAll();
-            App.getRealm().commitTransaction();
-            firstFetch(list);
-        } else {
-            selectAndUpdate(list);
-        }
-    }
-
-    private void selectAndUpdate(List<Long> list) {
-        final ArrayList<Story> list1 = new ArrayList<>();
-        ArrayList<Long> delayed = new ArrayList<>();
-        ArrayList<Integer> ranks = new ArrayList<>();
-        ArrayList<Integer> ranks1 = new ArrayList<>();
-        for (int i = 0; i < Math.min(list.size(), sotries.size()); i++) {
-            if (sotries.get(i).getId() != list.get(i).intValue()) {
-                Story story = App.getRealm().where(Story.class).equalTo("id", list.get(i).intValue()).findFirst();
-                delayed.add(list.get(i));
-                ranks.add(i);
-                if (story != null) {
-                    list1.add(story);
-                }
-            }
-        }
-        StoryDao.delete(list1);
-        new BatchRequest(delayed, new AbstractBatchRequest.JobCompleteListener<Story>() {
-            @Override
-            public void onJobComplete(List<Story> response) {
-                StoryDao.addnewData(response);
-                loadListener.onDataLoaded();
-            }
-        }, ranks).start();
-    }
 
     private void firstFetch(List<Long> list) {
         int i = 0;
@@ -169,16 +127,6 @@ public class StoryController extends Fragment {
             rankss.add((long) i);
         }
         Stories.addToDb(rem, rankss, false);
-    }
-
-    private int getItemsChangedCount(List<Long> list) {
-        int itemsChanged = 0;
-        for (int i = 0; i < Math.min(list.size(), sotries.size()); i++) {
-            if (sotries.get(i).getId() != list.get(i).intValue()) {
-                itemsChanged++;
-            }
-        }
-        return itemsChanged;
     }
 
     private void fetchFromNetwork() {
@@ -232,6 +180,18 @@ public class StoryController extends Fragment {
 
     public interface OnDataLoadListener {
         void onDataLoaded();
+    }
+
+    private class RobustLayoutManaget extends LinearLayoutManager{
+
+        RobustLayoutManaget(Context context){
+            super(context);
+        }
+
+        @Override
+        public boolean supportsPredictiveItemAnimations() {
+            return false;
+        }
     }
 
 }

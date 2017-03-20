@@ -1,6 +1,5 @@
 package com.propertyguru.nishant.nvpropertyguru.model;
 
-import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -8,8 +7,6 @@ import io.realm.annotations.PrimaryKey;
 /**
  * Created by nishant on 15.03.17.
  */
-
-import java.util.List;
 
 import com.google.firebase.database.Exclude;
 import com.google.gson.annotations.Expose;
@@ -29,9 +26,17 @@ public class Story extends RealmObject  {
     private Integer id;
 
 
+    public void setParent(Long parent) {
+        this.parent = parent;
+    }
+
+    public Long getParent() {
+        return parent;
+    }
+
     @SerializedName("parent")
     @Expose
-    private Integer parent;
+    private Long parent;
 
     @SerializedName("text")
     @Expose
@@ -49,19 +54,29 @@ public class Story extends RealmObject  {
     @Expose
     private String type;
 
+    private Integer descendants;
+
     @Exclude
     private Integer rank ;
 
-    public String getKid() {
+    public RealmList<RealmInteger> getKid() {
         return kid;
     }
 
-    public void setKids(String kid) {
+    public void setKid(RealmList<RealmInteger> kid) {
         this.kid = kid;
     }
 
     @Exclude
-    private String kid;
+    private RealmList<RealmInteger> kid;
+
+    public Integer getDescendants() {
+        return descendants;
+    }
+
+    public void setDescendants(Integer descendants) {
+        this.descendants = descendants;
+    }
 
     public Integer getRank() {
         return rank;
@@ -85,14 +100,6 @@ public class Story extends RealmObject  {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Integer getParent() {
-        return parent;
-    }
-
-    public void setParent(Integer parent) {
-        this.parent = parent;
     }
 
     public String getText() {

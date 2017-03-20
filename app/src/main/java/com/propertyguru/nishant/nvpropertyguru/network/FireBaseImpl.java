@@ -5,16 +5,15 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.JsonArray;
 import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
 import com.propertyguru.nishant.nvpropertyguru.model.Story;
 import com.propertyguru.nishant.nvpropertyguru.util.RealmInteger;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import io.realm.RealmList;
 
 /**
  * Created by nishant on 16.03.17.
@@ -65,21 +64,15 @@ public class FireBaseImpl implements ApiService {
                 Story story = dataSnapshot.getValue(Story.class);
                 HashMap<String, Object> hm = (HashMap<String, Object>) dataSnapshot.getValue();
                 ArrayList<Long> kids = (ArrayList<Long>) hm.get("kids");
-
-                JsonArray jsonArray = new JsonArray();
-                if (kids != null) {
-                    for (int i = 0; i < kids.size(); i++) {
-                        jsonArray.add(kids.get(i));
+                if(kids != null) {
+                    RealmList<RealmInteger> realmKids = new RealmList<RealmInteger>();
+                    for (Long kid : kids) {
+                        realmKids.add(new RealmInteger(kid));
                     }
-                }
-                try {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("kids", jsonArray);
-                    story.setKids(jsonObject.toString());
-                    responseListener.onSuccess(story);
-                }catch (Exception e){
 
+                    story.setKid(realmKids);
                 }
+                responseListener.onSuccess(story);
             }
 
             @Override

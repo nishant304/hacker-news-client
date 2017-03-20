@@ -63,4 +63,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public void onDataLoaded() {
         swipeRefreshLayout.setRefreshing(false);
     }
+
+
 }

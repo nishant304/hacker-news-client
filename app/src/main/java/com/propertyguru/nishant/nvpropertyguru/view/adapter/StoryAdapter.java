@@ -60,6 +60,11 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     }
 
     @Override
+    public long getItemId(int position) {
+        return itemList.get(position).getId();
+    }
+
+    @Override
     public int getItemCount() {
         return itemList.size();
     }
@@ -90,7 +95,8 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
         System.out.println("adapter changed");
-        if (changeSet != null && changeSet.getInsertionRanges().length>0) {
+        if (changeSet != null && changeSet.getInsertionRanges().length>0 &&
+                changeSet.getDeletionRanges().length ==0 && changeSet.getChangeRanges().length ==0) {
             System.out.println("onChange insertion  len " + changeSet.getInsertionRanges().length);
             for (int i = 0; i < changeSet.getInsertionRanges().length; i++) {
                 notifyItemRangeInserted(changeSet.getInsertionRanges()[i].startIndex,

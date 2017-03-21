@@ -27,31 +27,12 @@
             />
 
         <TextView
-            android:id="@+id/article_user"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/article_title"
-            android:layout_margin="10dp"
-            android:layout_toRightOf="@+id/article_time"
-            android:paddingLeft="10dp"
-            tools:text="user" />
-
-        <TextView
-            android:id="@+id/article_score"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/article_title"
-            android:layout_margin="10dp"
-            android:layout_toRightOf="@+id/article_user"
-            tools:text="12 points" />
-
-        <TextView
             android:id="@+id/article_comments"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/article_title"
             android:layout_margin="10dp"
-            android:layout_toRightOf="@+id/article_score" />
+            android:layout_toRightOf="@+id/article_time" />
     </RelativeLayout>
 
 </android.support.v7.widget.CardView>

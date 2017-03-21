@@ -33,7 +33,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     private RealmResults<Story> itemList;
 
-    public StoryAdapter(Context context, RealmResults<Story> itemList){
+    public StoryAdapter(Context context, RealmResults<Story> itemList) {
         inflater = LayoutInflater.from(context);
         this.itemList = itemList;
         this.itemList.addChangeListener(this);
@@ -41,19 +41,19 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     @Override
     public StoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new StoryHolder(inflater.inflate(R.layout.story_item_view,parent,false));
+        return new StoryHolder(inflater.inflate(R.layout.story_item_view, parent, false));
     }
 
     @Override
     public void onBindViewHolder(final StoryHolder holder, int position) {
         holder.text.setText(itemList.get(position).getTitle());
-        holder.time.setText("by " +itemList.get(position).getBy());
-        holder.comments.setText(itemList.get(position).getDescendants()+" comments");
+        holder.time.setText("by " + itemList.get(position).getBy());
+        holder.comments.setText(itemList.get(position).getDescendants() + " comments");
         holder.comments.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), CommentsActivty.class);
-                intent.putExtra("storyId",itemList.get(holder.getAdapterPosition()).getId());
+                intent.putExtra("storyId", itemList.get(holder.getAdapterPosition()).getId());
                 v.getContext().startActivity(intent);
             }
         });
@@ -64,19 +64,18 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return itemList.size();
     }
 
-    class StoryHolder extends RecyclerView.ViewHolder{
+    class StoryHolder extends RecyclerView.ViewHolder {
 
-        TextView text ;
-        TextView time ;
-        TextView comments ;
-        TextView score ;
+        TextView text;
+        TextView time;
+        TextView comments;
+        TextView score;
 
-        StoryHolder(View view){
+        StoryHolder(View view) {
             super(view);
             text = (TextView) view.findViewById(R.id.article_title);
             time = (TextView) view.findViewById(R.id.article_time);
             comments = (TextView) view.findViewById(R.id.article_comments);
-            score = (TextView) view.findViewById(R.id.article_score);
         }
     }
 
@@ -84,25 +83,20 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return inflater;
     }
 
-    protected  Story  getItemAtPosition(int pos){
+    protected Story getItemAtPosition(int pos) {
         return itemList.get(pos);
     }
 
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-        if(changeSet != null && changeSet.getInsertionRanges().length>0){
-            System.out.println("onChange insertion  len "+changeSet.getInsertionRanges().length);
-            for(int i =0;i<changeSet.getInsertionRanges().length;i++) {
+        System.out.println("adapter changed");
+        if (changeSet != null && changeSet.getInsertionRanges().length>0) {
+            System.out.println("onChange insertion  len " + changeSet.getInsertionRanges().length);
+            for (int i = 0; i < changeSet.getInsertionRanges().length; i++) {
                 notifyItemRangeInserted(changeSet.getInsertionRanges()[i].startIndex,
                         changeSet.getInsertionRanges()[i].length);
             }
-        }else if(changeSet != null && changeSet.getDeletionRanges().length>0){
-            System.out.println("onChange deletion  len "+changeSet.getDeletionRanges().length);
-            for(int i =0;i<changeSet.getDeletionRanges().length;i++) {
-                notifyItemRangeRemoved(changeSet.getDeletionRanges()[i].startIndex,
-                        changeSet.getDeletionRanges()[i].length);
-            }
-        }else{
+        } else {
             notifyDataSetChanged();
         }
     }

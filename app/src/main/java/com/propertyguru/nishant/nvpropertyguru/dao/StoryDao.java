@@ -24,8 +24,8 @@ public class StoryDao {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                addData(response,realm);
                 delData(delete,realm);
+                addData(response,realm);
             }
         });
     }

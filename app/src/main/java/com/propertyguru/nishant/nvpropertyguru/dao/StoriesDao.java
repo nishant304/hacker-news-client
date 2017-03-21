@@ -51,11 +51,8 @@ public class StoriesDao {
                 realm.delete(Stories.class);
                 for (int i=0;i<list.size();i++) {
                     long id = list.get(i);
-                    Stories stories = realm.where(Stories.class).equalTo("id", id).findFirst();
-                    if (stories == null) {
-                        stories = realm.createObject(Stories.class, id);
-                        stories.setRank(ranks.get(i).intValue());
-                    }
+                    Stories stories = realm.createObject(Stories.class, id);
+                    stories.setRank(ranks.get(i).intValue());
                 }
             }
         });

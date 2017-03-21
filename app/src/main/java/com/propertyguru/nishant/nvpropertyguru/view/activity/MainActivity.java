@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         storyViewController = StoryViewController.getInstance(getFragmentManager());
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.addOnScrollListener(new ScrollListener());
+        recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(new StoryAdapter(this, storyViewController.getStories()));

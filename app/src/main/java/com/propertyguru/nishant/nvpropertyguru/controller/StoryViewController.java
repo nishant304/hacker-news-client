@@ -32,7 +32,8 @@ import io.realm.RealmResults;
  * Created by nishant on 15.03.17.
  */
 
-public class StoryViewController extends Fragment implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
+public class StoryViewController extends Fragment implements OrderedRealmCollectionChangeListener<RealmResults<Story>>,
+            DoneCallback<RealmResults<Stories>>{
 
     public static final String TAG = StoryViewController.class.getSimpleName();
 
@@ -40,7 +41,11 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     private RealmResults<Story> sotries;
 
+    private RealmResults<Stories> collection;
+
     private DeferredObject<RealmResults<Story>,Void,Void> deferredStoryFetch = new DeferredObject();
+
+    private DeferredObject<RealmResults<Stories>,Void,Void> deferredLeftStories = new DeferredObject();
 
     private OnDataLoadListener loadListener;
 
@@ -74,6 +79,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             sotries = StoryDao.getStoriesSortedByRank();
         }
         sotries.addChangeListener(this);
+        collection = StoriesDao.getStories();
+        collection.addChangeListener(new StoriesChangeListener());
         fetchFromNetwork();
     }
 
@@ -83,7 +90,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         }
         return sotries;
     }
-
 
     private ResponseListener<List<Long>> storiesResponseListener = new ResponseListener<List<Long>>() {
         @Override
@@ -128,6 +134,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             rem.add(list.get(i));
             rankss.add((long) i);
         }
+        deferredLeftStories = new DeferredObject<>();
         StoriesDao.addToDb(rem, rankss);
     }
 
@@ -145,6 +152,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             }
             ranksForSelected.add(i);
         }
+
         new BatchRequest(selectForUpdate, new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
@@ -171,36 +179,54 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             loadListener.onDataLoaded();
             return;
         }
-
-        final RealmResults<Stories> result = StoriesDao.getStories();
-        result.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Stories>>() {
-            @Override
-            public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
-                result.removeAllChangeListeners();
-                if (collection.size() == 0) {
-                    loadListener.onDataLoaded();
-                    return;
-                }
-                List<Long> req = new ArrayList<Long>();
-                List<Integer> ranks = new ArrayList<Integer>();
-                for (int i = 0; i < Math.min(noOfItems, collection.size()); i++) {
-                    req.add(collection.get(i).getId());
-                    ranks.add(collection.get(i).getRank());
-                }
-                new BatchRequest(req, new AbstractBatchRequest.JobCompleteListener<Story>() {
-                    @Override
-                    public void onJobComplete(List<Story> response) {
-                        StoryDao.addnewData(response);
-                        StoriesDao.delete(response);
-                        loadListener.onDataLoaded();
-                    }
-                }, ranks).start();
-            }
-        });
+        System.out.println("new user request");
+        deferredLeftStories.done(this);
     }
 
     public interface OnDataLoadListener {
         void onDataLoaded();
+    }
+
+    private class StoriesChangeListener implements OrderedRealmCollectionChangeListener<RealmResults<Stories>>{
+        @Override
+        public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
+            System.out.println("new user request data change");
+            if(!deferredLeftStories.isResolved()) {
+                deferredLeftStories.resolve(collection);
+                System.out.println("new user request data change resolved");
+            }
+        }
+    }
+
+    @Override
+    public void onDone(RealmResults<Stories> collection) {
+        List<Long> req = new ArrayList<Long>();
+        List<Integer> ranks = new ArrayList<Integer>();
+        for (int i = 0; i < Math.min(15, collection.size()); i++) {
+            req.add(collection.get(i).getId());
+            ranks.add(collection.get(i).getRank());
+        }
+        new BatchRequest(req, new AbstractBatchRequest.JobCompleteListener<Story>() {
+            @Override
+            public void onJobComplete(List<Story> response) {
+                StoryDao.addnewData(response);
+                deferredLeftStories = new DeferredObject<>();
+                StoriesDao.delete(response);
+                loadListener.onDataLoaded();
+            }
+        }, ranks).start();
+    }
+
+    @Override
+    public void onDestroy() {
+        if(deferredLeftStories.isPending()){
+            deferredLeftStories.reject(null);
+        }
+        if(deferredStoryFetch.isPending()){
+            deferredStoryFetch.reject(null);
+        }
+        collection.removeAllChangeListeners();
+        super.onDestroy();
     }
 
 }

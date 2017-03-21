@@ -6,19 +6,18 @@ import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 
 import com.propertyguru.nishant.nvpropertyguru.R;
-import com.propertyguru.nishant.nvpropertyguru.controller.StoryController;
+import com.propertyguru.nishant.nvpropertyguru.controller.StoryViewController;
+import com.propertyguru.nishant.nvpropertyguru.model.Story;
 import com.propertyguru.nishant.nvpropertyguru.view.adapter.StoryAdapter;
 import com.propertyguru.nishant.nvpropertyguru.view.ui.LinearLayoutManager;
 
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,StoryController.OnDataLoadListener {
+import io.realm.RealmResults;
 
-    private RecyclerView recyclerView;
-
-    private  StoryAdapter storyAdapter;
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,StoryViewController.OnDataLoadListener {
 
     private LinearLayoutManager layoutManager;
 
-    private StoryController storyController;
+    private StoryViewController storyViewController;
 
     private int pos ;
 
@@ -36,13 +35,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        storyController = StoryController.getInstance(getFragmentManager());
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        storyViewController = StoryViewController.getInstance(getFragmentManager());
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.addOnScrollListener(new ScrollListener());
-        storyAdapter = new StoryAdapter(this,storyController.getStories());
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(storyAdapter);
+        recyclerView.setAdapter(new StoryAdapter(this, storyViewController.getStories()));
         layoutManager.scrollToPosition(pos);
     }
 
@@ -55,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onRefresh() {
         isLoading = true;
-        storyController.refreshList();
+        storyViewController.fetchFromNetwork();
     }
 
     @Override
@@ -73,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             int totalItems = layoutManager.getItemCount();
             if (dy > 0 && !isLoading && visibleItems + firstVisibleItem +3>= totalItems) {
                 isLoading = true;
-                storyController.loadMore(2*visibleItems);
+                storyViewController.loadMore(2*visibleItems);
             }
         }
     }

@@ -45,7 +45,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     }
 
     @Override
-    public void onBindViewHolder(StoryHolder holder, final int position) {
+    public void onBindViewHolder(final StoryHolder holder, int position) {
         holder.text.setText(itemList.get(position).getTitle());
         holder.time.setText("by " +itemList.get(position).getBy());
         holder.comments.setText(itemList.get(position).getDescendants()+" comments");
@@ -53,7 +53,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(v.getContext(), CommentsActivty.class);
-                intent.putExtra("storyId",itemList.get(position).getId());
+                intent.putExtra("storyId",itemList.get(holder.getAdapterPosition()).getId());
                 v.getContext().startActivity(intent);
             }
         });
@@ -91,8 +91,17 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
         if(changeSet != null && changeSet.getInsertionRanges().length>0){
-            notifyItemRangeInserted(changeSet.getInsertionRanges()[0].startIndex,
-                    changeSet.getInsertionRanges()[0].length);
+            System.out.println("onChange insertion  len "+changeSet.getInsertionRanges().length);
+            for(int i =0;i<changeSet.getInsertionRanges().length;i++) {
+                notifyItemRangeInserted(changeSet.getInsertionRanges()[i].startIndex,
+                        changeSet.getInsertionRanges()[i].length);
+            }
+        }else if(changeSet != null && changeSet.getDeletionRanges().length>0){
+            System.out.println("onChange deletion  len "+changeSet.getDeletionRanges().length);
+            for(int i =0;i<changeSet.getDeletionRanges().length;i++) {
+                notifyItemRangeRemoved(changeSet.getDeletionRanges()[i].startIndex,
+                        changeSet.getDeletionRanges()[i].length);
+            }
         }else{
             notifyDataSetChanged();
         }

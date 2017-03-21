@@ -47,21 +47,4 @@ public class Stories extends RealmObject {
         isFetched = fetched;
     }
 
-    public static void addToDb(final List<Long> list,final List<Long> ranks,  final boolean isFetched) {
-        Realm.getInstance(App.getConfig()).executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                for (int i=0;i<list.size();i++) {
-                    long id = list.get(i);
-                    Stories stories = realm.where(Stories.class).equalTo("id", id).findFirst();
-                    if (stories == null) {
-                        stories = realm.createObject(Stories.class, id);
-                        stories.setRank(ranks.get(i).intValue());
-                        stories.setFetched(false);
-                    }
-                }
-            }
-        });
-    }
-
 }

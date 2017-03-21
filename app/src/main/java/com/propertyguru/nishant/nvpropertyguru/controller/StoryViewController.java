@@ -6,8 +6,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 
 import com.propertyguru.nishant.nvpropertyguru.App;
 import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
@@ -20,38 +18,40 @@ import com.propertyguru.nishant.nvpropertyguru.network.BatchRequest;
 import com.propertyguru.nishant.nvpropertyguru.network.FireBaseImpl;
 import com.propertyguru.nishant.nvpropertyguru.network.ResponseListener;
 
+import org.jdeferred.DoneCallback;
+import org.jdeferred.impl.DeferredObject;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
-import io.realm.Realm;
 import io.realm.RealmResults;
 
 /**
  * Created by nishant on 15.03.17.
  */
 
-public class StoryController extends Fragment {
+public class StoryViewController extends Fragment implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
 
-    public static final String TAG = StoryController.class.getSimpleName();
+    public static final String TAG = StoryViewController.class.getSimpleName();
 
     private ApiService apiService = FireBaseImpl.getInstance();
 
     private RealmResults<Story> sotries;
 
+    private DeferredObject<RealmResults<Story>,Void,Void> deferredStoryFetch = new DeferredObject();
+
     private OnDataLoadListener loadListener;
 
-    public static StoryController getInstance(@NonNull FragmentManager fragmentManager) {
-        StoryController storyController = (StoryController) fragmentManager.findFragmentByTag(TAG);
-        if (storyController == null) {
-            storyController = new StoryController();
+    public static StoryViewController getInstance(@NonNull FragmentManager fragmentManager) {
+        StoryViewController storyViewController = (StoryViewController) fragmentManager.findFragmentByTag(TAG);
+        if (storyViewController == null) {
+            storyViewController = new StoryViewController();
             fragmentManager
-                    .beginTransaction().add(storyController, TAG).commit();
+                    .beginTransaction().add(storyViewController, TAG).commit();
         }
-        return storyController;
+        return storyViewController;
     }
 
     @Override
@@ -61,39 +61,43 @@ public class StoryController extends Fragment {
     }
 
     @Override
+    public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
+        sotries.removeChangeListener(this);
+        deferredStoryFetch.resolve(collection);
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        fetchOnCreate();
+        if(sotries == null) {
+            sotries = StoryDao.getStoriesSortedByRank();
+        }
+        sotries.addChangeListener(this);
+        fetchFromNetwork();
     }
 
-    public RealmResults<Story> getStories() {
-        if (sotries == null) {
+    public RealmResults<Story> getStories(){
+        if(sotries == null){
             sotries = StoryDao.getStoriesSortedByRank();
         }
         return sotries;
     }
 
-    public void fetchOnCreate() {
-        getStories().addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<Story>>() {
-            @Override
-            public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-                getStories().removeChangeListener(this);
-                if (collection.size() == 0) {
-                    fetchFromNetwork();
-                }
-            }
-        });
-    }
-
-    public void refreshList() {
-        fetchFromNetwork();
-    }
 
     private ResponseListener<List<Long>> storiesResponseListener = new ResponseListener<List<Long>>() {
         @Override
-        public void onSuccess(List<Long> list) {
-                firstFetch(list);
+        public void onSuccess(final List<Long> list) {
+            deferredStoryFetch.done(new DoneCallback<RealmResults<Story>>() {
+                @Override
+                public void onDone(RealmResults<Story> result) {
+                    if(result.size() == 0){
+                        firstFetch(list);
+                    }else{
+                        refreshList(list);
+                    }
+                }
+            });
         }
 
         @Override
@@ -124,10 +128,41 @@ public class StoryController extends Fragment {
             rem.add(list.get(i));
             rankss.add((long) i);
         }
-        Stories.addToDb(rem, rankss, false);
+        StoriesDao.addToDb(rem, rankss);
     }
 
-    private void fetchFromNetwork() {
+    private void refreshList(List<Long> list){
+        ArrayList<Long> selectForUpdate = new ArrayList<>();
+        final ArrayList<Integer> selectForDelete = new ArrayList<>();
+        final ArrayList<Integer> ranksForSelected = new ArrayList<>();
+        int i =0;
+        for ( ;i< Math.min(list.size(),sotries.size());i++){
+            if(list.get(i).intValue() == sotries.get(i).getId()){
+                selectForUpdate.add(Long.valueOf(sotries.get(i).getId()));
+            }else{
+                selectForDelete.add(sotries.get(i).getId());
+                selectForUpdate.add(list.get(i));
+            }
+            ranksForSelected.add(i);
+        }
+        new BatchRequest(selectForUpdate, new AbstractBatchRequest.JobCompleteListener<Story>() {
+            @Override
+            public void onJobComplete(List<Story> response) {
+                StoryDao.addAndDelete(response,ranksForSelected,selectForDelete);
+                loadListener.onDataLoaded();
+            }
+        },ranksForSelected).start();
+
+        ArrayList<Long> rem = new ArrayList<>();
+        ArrayList<Long> rankss = new ArrayList<>();
+        for (; i < list.size(); i++) {
+            rem.add(list.get(i));
+            rankss.add((long) i);
+        }
+        StoriesDao.addToDb(rem, rankss);
+    }
+
+    public void fetchFromNetwork() {
         apiService.getStoryIds(storiesResponseListener);
     }
 

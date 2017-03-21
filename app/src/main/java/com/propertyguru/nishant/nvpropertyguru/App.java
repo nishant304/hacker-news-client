@@ -26,8 +26,6 @@ public class App extends Application {
 
     private static ApiService apiService ;
 
-    private static Realm realm;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -42,7 +40,6 @@ public class App extends Application {
                 .build();
 
         apiService = FireBaseImpl.getInstance();
-        realm = Realm.getInstance(getConfig());
     }
 
     public static Retrofit getRetrofit() {
@@ -58,7 +55,7 @@ public class App extends Application {
     }
 
     public static Realm getRealm() {
-        return realm;
+        return Realm.getInstance(getConfig());
     }
 
 }

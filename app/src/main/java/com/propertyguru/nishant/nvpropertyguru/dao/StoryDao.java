@@ -2,7 +2,6 @@ package com.propertyguru.nishant.nvpropertyguru.dao;
 
 import com.propertyguru.nishant.nvpropertyguru.App;
 import com.propertyguru.nishant.nvpropertyguru.model.Story;
-import com.propertyguru.nishant.nvpropertyguru.model.UpdateStory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,41 +20,33 @@ public class StoryDao {
         return App.getRealm().where(Story.class).equalTo("type","story").findAllSortedAsync("rank");
     }
 
-    public  static  void addnewData(final List<Story> response){
+    public static void addAndDelete(final List<Story> response, final List<Integer> ranks,final List<Integer> delete){
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                for (int i = 0; i < response.size(); i++) {
-                    try {
-                        Story story = response.get(i);
-                        realm.copyToRealmOrUpdate(story);
-                    } catch (Exception e) {
-
-                    }
-                    System.out.println("data changed from copy");
-                }
+                addData(response,realm);
+                delData(delete,realm);
             }
         });
     }
 
-    public  static  void addnewData(final List<Story> response, final List<Integer> ranks){
-        final ArrayList<Integer> list = new ArrayList<>();
+    private static void addData( List<Story> response,Realm realm){
         for (int i = 0; i < response.size(); i++) {
-            list.add(response.get(i).getId());
+            try {
+                Story story = response.get(i);
+                realm.copyToRealmOrUpdate(story);
+            } catch (Exception e) {
+
+            }
+            System.out.println("data changed from copy");
         }
+    }
+
+    public  static  void addnewData(final List<Story> response){
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                for (int i = 0; i < response.size(); i++) {
-                    try {
-                        Story story = realm.where(Story.class).equalTo("id",list.get(i)).findFirst();
-                        story.setRank(ranks.get(i));
-                        realm.copyToRealmOrUpdate(story);
-                    } catch (Exception e) {
-
-                    }
-                    System.out.println("data changed from copy");
-                }
+                addData(response,realm);
             }
         });
     }
@@ -68,16 +59,20 @@ public class StoryDao {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                for (int i = 0; i < response.size(); i++) {
-                    try {
-                        Story story = realm.where(Story.class).equalTo("id",list.get(i)).findFirst();
-                        story.deleteFromRealm();
-                    } catch (Exception e) {
-
-                    }
-                }
+            delData(list,realm);
             }
         });
+    }
+
+    private static void delData(List<Integer> list,Realm realm){
+        for (int i = 0; i < list.size(); i++) {
+            try {
+                Story story = realm.where(Story.class).equalTo("id",list.get(i)).findFirst();
+                story.deleteFromRealm();
+            } catch (Exception e) {
+
+            }
+        }
     }
 
 }

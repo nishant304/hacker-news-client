@@ -7,11 +7,8 @@ import android.support.v7.widget.RecyclerView;
 
 import com.propertyguru.nishant.nvpropertyguru.R;
 import com.propertyguru.nishant.nvpropertyguru.controller.StoryViewController;
-import com.propertyguru.nishant.nvpropertyguru.model.Story;
 import com.propertyguru.nishant.nvpropertyguru.view.adapter.StoryAdapter;
 import com.propertyguru.nishant.nvpropertyguru.view.ui.LinearLayoutManager;
-
-import io.realm.RealmResults;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,StoryViewController.OnDataLoadListener {
 
@@ -54,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onRefresh() {
         isLoading = true;
-        storyViewController.fetchFromNetwork();
+        storyViewController.getLatestStories();
     }
 
     @Override
@@ -75,6 +72,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 storyViewController.loadMore(2*visibleItems);
             }
         }
+    }
+
+    public LinearLayoutManager getLayoutManager() {
+        return layoutManager;
     }
 
 }

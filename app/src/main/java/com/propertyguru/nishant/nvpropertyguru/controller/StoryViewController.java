@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.propertyguru.nishant.nvpropertyguru.App;
 import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
 import com.propertyguru.nishant.nvpropertyguru.dao.StoriesDao;
 import com.propertyguru.nishant.nvpropertyguru.dao.StoryDao;
@@ -81,7 +80,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         sotries.addChangeListener(this);
         collection = StoriesDao.getStories();
         collection.addChangeListener(new StoriesChangeListener());
-        fetchFromNetwork();
+        getLatestStories();
     }
 
     public RealmResults<Story> getStories(){
@@ -124,7 +123,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             @Override
             public void onJobComplete(List<Story> response) {
                 StoryDao.addnewData(response);
-                loadListener.onDataLoaded();
+                if(loadListener != null) {
+                    loadListener.onDataLoaded();
+                }
             }
         }, ranks).start();
 
@@ -134,7 +135,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             rem.add(list.get(i));
             rankss.add((long) i);
         }
-        deferredLeftStories = new DeferredObject<>();
+        if(deferredLeftStories == null || !deferredLeftStories.isPending()) {
+            deferredLeftStories = new DeferredObject<>();
+        }
         StoriesDao.addToDb(rem, rankss);
     }
 
@@ -157,7 +160,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             @Override
             public void onJobComplete(List<Story> response) {
                 StoryDao.addAndDelete(response,ranksForSelected,selectForDelete);
-                loadListener.onDataLoaded();
+                if(loadListener != null) {
+                    loadListener.onDataLoaded();
+                }
             }
         },ranksForSelected).start();
 
@@ -170,7 +175,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         StoriesDao.addToDb(rem, rankss);
     }
 
-    public void fetchFromNetwork() {
+    public void getLatestStories() {
         apiService.getStoryIds(storiesResponseListener);
     }
 
@@ -179,7 +184,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             loadListener.onDataLoaded();
             return;
         }
-        System.out.println("new user request");
         deferredLeftStories.done(this);
     }
 
@@ -190,10 +194,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     private class StoriesChangeListener implements OrderedRealmCollectionChangeListener<RealmResults<Stories>>{
         @Override
         public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
-            System.out.println("new user request data change");
             if(!deferredLeftStories.isResolved()) {
                 deferredLeftStories.resolve(collection);
-                System.out.println("new user request data change resolved");
             }
         }
     }
@@ -202,7 +204,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     public void onDone(RealmResults<Stories> collection) {
         List<Long> req = new ArrayList<Long>();
         List<Integer> ranks = new ArrayList<Integer>();
-        for (int i = 0; i < Math.min(15, collection.size()); i++) {
+        for (int i = 0; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), collection.size()); i++) {
             req.add(collection.get(i).getId());
             ranks.add(collection.get(i).getRank());
         }
@@ -210,7 +212,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             @Override
             public void onJobComplete(List<Story> response) {
                 StoryDao.addnewData(response);
-                deferredLeftStories = new DeferredObject<>();
+                if(deferredLeftStories == null || !deferredLeftStories.isPending()) {
+                    deferredLeftStories = new DeferredObject<>();
+                }
                 StoriesDao.delete(response);
                 loadListener.onDataLoaded();
             }
@@ -218,7 +222,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     @Override
-    public void onDestroy() {
+    public void onDetach() {
+        super.onDetach();
         if(deferredLeftStories.isPending()){
             deferredLeftStories.reject(null);
         }
@@ -226,7 +231,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             deferredStoryFetch.reject(null);
         }
         collection.removeAllChangeListeners();
-        super.onDestroy();
+        sotries.removeAllChangeListeners();
+        loadListener = null;
     }
 
 }

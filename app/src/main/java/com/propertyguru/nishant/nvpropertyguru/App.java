@@ -2,6 +2,7 @@ package com.propertyguru.nishant.nvpropertyguru;
 
 import android.app.Application;
 
+import com.google.android.gms.measurement.AppMeasurementReceiver;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.propertyguru.nishant.nvpropertyguru.api.ApiService;
@@ -29,6 +30,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
         FirebaseApp.initializeApp(this);
 
         Realm.init(this);

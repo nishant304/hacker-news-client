@@ -22,6 +22,10 @@ public abstract class AbstractBatchRequest<T> {
 
     private int reqCount;
 
+    private static int suggestedReqCount = 10;
+
+    private long startTime ;
+
     public AbstractBatchRequest(@NonNull  JobCompleteListener jobCompleteListener, int reqCount){
         if(reqCount < 0){
             throw new IllegalArgumentException("req count should not be less than zero");
@@ -31,6 +35,7 @@ public abstract class AbstractBatchRequest<T> {
             jobCompleteListener.onJobComplete(responses);
         }
 
+        startTime = System.currentTimeMillis();
         this.jobCompleteListener = jobCompleteListener;
         this.apiService = App.getApiService();
         this.reqCount = reqCount;
@@ -50,6 +55,7 @@ public abstract class AbstractBatchRequest<T> {
             responses.add(t);
             if (reqCount == 0) {
                 jobCompleteListener.onJobComplete(responses);
+                adjustSuggestedReqCount();
             }
         }
 
@@ -58,6 +64,7 @@ public abstract class AbstractBatchRequest<T> {
             reqCount--;
             if (reqCount == 0) {
                 jobCompleteListener.onJobComplete(responses);
+                adjustSuggestedReqCount();
             }
         }
     };
@@ -70,6 +77,21 @@ public abstract class AbstractBatchRequest<T> {
 
     public  interface JobCompleteListener<T>{
         void onJobComplete(List<T> response);
+    }
+
+    private void  adjustSuggestedReqCount(){
+        long duration =System.currentTimeMillis() - startTime;
+        if(duration < 500){
+            suggestedReqCount++;
+        }else{
+            suggestedReqCount--;
+        }
+        suggestedReqCount = Math.min(5,suggestedReqCount);
+        suggestedReqCount = Math.max(15,suggestedReqCount);
+    }
+
+    public static int getSuggestedReqCount() {
+        return suggestedReqCount;
     }
 }
 

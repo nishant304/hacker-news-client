@@ -90,29 +90,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         return storiesList;
     }
 
-    private class LiveStroyListResponseListener implements ResponseListener<List<Long>> {
-
-        private DeferredObject<List<Long>, Void, Void> deferredLiveStoryList;
-
-        private LiveStroyListResponseListener(DeferredObject<List<Long>, Void, Void> deferredLiveStoryList) {
-            this.deferredLiveStoryList = deferredLiveStoryList;
-        }
-
-        @Override
-        public void onSuccess(List<Long> list) {
-            deferredLiveStoryList.resolve(list);
-            StoryToFetchDao.deleteFromRemainderList();
-            StoryToFetchDao.add(list);
-        }
-
-        @Override
-        public void onError(Exception ex) {
-            if (loadListener != null) {
-                loadListener.onLoadError(new Exception("Something went wrong"));
-            }
-        }
-    }
-
     private void refreshList(List<Long> list) {
         ArrayList<Long> selectForUpdate = new ArrayList<>();
         final ArrayList<Integer> selectForDelete = new ArrayList<>();
@@ -153,15 +130,22 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     private void loadOrRefresh(final boolean shouldReresh) {
-        DeferredObject<List<Long>, Void, Void> deferredLiveStoryIds = new DeferredObject<>();
-        apiService.getStoryIds(new LiveStroyListResponseListener(deferredLiveStoryIds));
-        deferredLiveStoryIds.done(new DoneCallback<List<Long>>() {
+        apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
-            public void onDone(List<Long> liveStoryItemIds) {
+            public void onSuccess(List<Long> list) {
+                StoryToFetchDao.deleteFromRemainderList();
+                StoryToFetchDao.add(list);
                 if(shouldReresh) {
                     refreshList(liveStoryItemIds);
                 }else{
                     loadMore();
+                }
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                if (loadListener != null) {
+                    loadListener.onLoadError(new Exception("Something went wrong"));
                 }
             }
         });

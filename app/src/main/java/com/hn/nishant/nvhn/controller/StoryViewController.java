@@ -133,7 +133,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
             public void onSuccess(List<Long> liveStoryItemIds) {
-                StoryToFetchDao.deleteFromRemainderList();
                 StoryToFetchDao.add(liveStoryItemIds);
                 if(shouldReresh) {
                     refreshList(liveStoryItemIds);
@@ -166,7 +165,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         @Override
         public void onChange(RealmResults<StoryToFetch> remianingStory, OrderedCollectionChangeSet changeSet) {
             remianingStory.removeChangeListener(this);
-            List<Long> req = new ArrayList<Long>();
+            List<Long> req = new ArrayList<>();
             List<Integer> ranks = new ArrayList<>();
             for (int i = 0; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), remianingStory.size()); i++) {
                 req.add(remianingStory.get(i).getId());

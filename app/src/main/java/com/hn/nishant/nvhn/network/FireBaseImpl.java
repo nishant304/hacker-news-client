@@ -78,7 +78,7 @@ public class FireBaseImpl implements ApiService {
     private void setCommentsId(Story story, HashMap<String,Object> hm){
         ArrayList<Long> kids = (ArrayList<Long>) hm.get("kids");
         if (kids != null) {
-            RealmList<RealmInteger> realmKids = new RealmList<RealmInteger>();
+            RealmList<RealmInteger> realmKids = new RealmList<>();
             for (Long kid : kids) {
                 realmKids.add(new RealmInteger(kid));
             }

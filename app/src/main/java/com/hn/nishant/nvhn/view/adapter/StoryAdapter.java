@@ -85,25 +85,25 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return itemList.get(pos);
     }
 
+
+    /***
+     *
+     * @param collection
+     * @param changeSet
+     * while it is awesome to notify the adapter about items changed it comes at cost of
+     * draw and layout perfroamnce cost if there are too many changes specially on refresh,so
+     * lets this keep this implementation for insertions only
+     */
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-        if (changeSet != null ) {
-
-            for (int i = changeSet.getDeletionRanges().length-1; i >=0 ; i--) {
-                notifyItemRangeRemoved(changeSet.getDeletionRanges()[i].startIndex,
-                        changeSet.getDeletionRanges()[i].length);
-            }
+        if (changeSet != null && changeSet.getInsertionRanges().length == 1
+                && changeSet.getDeletionRanges().length == 0
+                && changeSet.getChangeRanges().length == 0) {
 
             for (int i = 0; i < changeSet.getInsertionRanges().length; i++) {
                 notifyItemRangeInserted(changeSet.getInsertionRanges()[i].startIndex,
                         changeSet.getInsertionRanges()[i].length);
             }
-
-            for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
-                notifyItemRangeChanged(changeSet.getChangeRanges()[i].startIndex,
-                        changeSet.getChangeRanges()[i].length);
-            }
-
         } else {
             notifyDataSetChanged();
         }

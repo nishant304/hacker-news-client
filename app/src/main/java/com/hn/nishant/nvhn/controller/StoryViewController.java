@@ -132,9 +132,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     private void loadOrRefresh(final boolean shouldReresh) {
         apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
-            public void onSuccess(List<Long> list) {
+            public void onSuccess(List<Long> liveStoryItemIds) {
                 StoryToFetchDao.deleteFromRemainderList();
-                StoryToFetchDao.add(list);
+                StoryToFetchDao.add(liveStoryItemIds);
                 if(shouldReresh) {
                     refreshList(liveStoryItemIds);
                 }else{

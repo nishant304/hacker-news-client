@@ -4,9 +4,11 @@ import android.support.annotation.NonNull;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
+import com.hn.nishant.nvhn.model.Story;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -23,7 +25,9 @@ public abstract class AbstractBatchRequest<T> {
 
     private int reqCount;
 
-    private static int suggestedReqCount = 10;
+    private static int suggestedReqCount = 7;
+
+    private HashMap<Integer,Boolean> reqTracker = new HashMap<>();
 
     private long startTime;
 
@@ -86,8 +90,8 @@ public abstract class AbstractBatchRequest<T> {
         } else {
             suggestedReqCount--;
         }
-        suggestedReqCount = Math.min(5, suggestedReqCount);
-        suggestedReqCount = Math.max(15, suggestedReqCount);
+        suggestedReqCount = Math.min(10, suggestedReqCount);
+        suggestedReqCount = Math.max(5, suggestedReqCount);
     }
 
     public static int getSuggestedReqCount() {

@@ -16,9 +16,9 @@ public class StoryBatchRequest extends AbstractBatchRequest<Story> {
 
     private List<Integer> ranks;
 
-    private HashMap<Integer, Integer> hm = new HashMap<>();
+    private HashMap<Integer, Integer> idToRankMapping = new HashMap<>();
 
-    public StoryBatchRequest(List<Long> list, JobCompleteListener jobCompleteListener, List<Integer> ranks) {
+    public StoryBatchRequest(List<Long> list, List<Integer> ranks, JobCompleteListener jobCompleteListener) {
         super(jobCompleteListener, list.size());
         this.requests = list;
         this.ranks = ranks;
@@ -26,12 +26,12 @@ public class StoryBatchRequest extends AbstractBatchRequest<Story> {
 
     @Override
     protected void onSingleItemFetched(Story story) {
-        story.setRank(hm.get(story.getId()));
+        story.setRank(idToRankMapping.get(story.getId()));
     }
 
     @Override
     protected void placeSingleReq(ApiService apiService, ResponseListener<Story> responseListener, int position) {
-        hm.put(requests.get(position).intValue(), ranks.get(position));
+        idToRankMapping.put(requests.get(position).intValue(), ranks.get(position));
         apiService.getStory(requests.get(position), responseListener);
     }
 

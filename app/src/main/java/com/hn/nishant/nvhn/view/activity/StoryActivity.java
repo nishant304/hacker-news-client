@@ -12,13 +12,10 @@ import com.hn.nishant.nvhn.controller.StoryViewController;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
 import com.hn.nishant.nvhn.view.ui.LinearLayoutManager;
 
-import butterknife.BindView;
-
 public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener, StoryViewController.OnDataLoadListener {
 
     private LinearLayoutManager layoutManager;
 
-    @BindView(R.id.recyclerView)
     public RecyclerView recyclerView;
 
     private StoryViewController storyViewController;
@@ -43,9 +40,10 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     }
 
     private void setUpRecyclerView(){
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.addOnScrollListener(new ScrollListener());
         recyclerView.setHasFixedSize(true);
-
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(new StoryAdapter(this, storyViewController.getStories()));
@@ -61,17 +59,21 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     @Override
     public void onRefresh() {
         isLoading = true;
-        storyViewController.onRefreshRequest();
+        storyViewController.getLatestStories();
     }
 
     @Override
     public void onDataLoaded() {
+        System.out.println("on data loaded");
         isLoading = false;
         swipeRefreshLayout.setRefreshing(false);
+        makeToast("scroll to load more");
     }
 
     @Override
     public void onLoadError(Exception ex) {
+        isLoading = false;
+        swipeRefreshLayout.setRefreshing(false);
         makeToast(ex.getMessage());
     }
 
@@ -84,7 +86,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int totalItems = layoutManager.getItemCount();
             if (dy > 0 && !isLoading && visibleItems + firstVisibleItem + 3 >= totalItems) {
                 isLoading = true;
-                storyViewController.loadMore(2 * visibleItems);
+                storyViewController.loadMore();
             }
         }
     }

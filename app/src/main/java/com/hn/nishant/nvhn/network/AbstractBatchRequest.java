@@ -15,7 +15,7 @@ import java.util.List;
 
 public abstract class AbstractBatchRequest<T> {
 
-    private WeakReference<JobCompleteListener> jobCompleteListener;
+    private JobCompleteListener jobCompleteListener;
 
     private ApiService apiService = App.getApiService();
 
@@ -37,7 +37,7 @@ public abstract class AbstractBatchRequest<T> {
         }
 
         this.startTime = System.currentTimeMillis();
-        this.jobCompleteListener = new WeakReference<>(jobCompleteListener);
+        this.jobCompleteListener = jobCompleteListener;
         this.reqCount = reqCount;
     }
 
@@ -54,9 +54,7 @@ public abstract class AbstractBatchRequest<T> {
             onSingleItemFetched(t);
             responses.add(t);
             if (reqCount == 0) {
-                if (jobCompleteListener.get() != null) {
-                    jobCompleteListener.get().onJobComplete(responses);
-                }
+                jobCompleteListener.onJobComplete(responses);
                 adjustSuggestedReqCount();
             }
         }
@@ -65,9 +63,7 @@ public abstract class AbstractBatchRequest<T> {
         public void onError(Exception ex) {
             reqCount--;
             if (reqCount == 0) {
-                if (jobCompleteListener.get() != null) {
-                    jobCompleteListener.get().onJobComplete(responses);
-                }
+                jobCompleteListener.onJobComplete(responses);
                 adjustSuggestedReqCount();
             }
         }

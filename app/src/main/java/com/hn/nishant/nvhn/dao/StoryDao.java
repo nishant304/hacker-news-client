@@ -30,7 +30,7 @@ public class StoryDao {
         return App.getRealm().where(Story.class).equalTo("id", id).findFirst();
     }
 
-    public static void addAndDelete(final List<Story> response, final List<Integer> ranks, final List<Integer> delete) {
+    public static void addAndDelete(final List<Story> response, final List<Integer> delete) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {

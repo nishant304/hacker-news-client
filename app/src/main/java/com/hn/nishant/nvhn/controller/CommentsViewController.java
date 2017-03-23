@@ -59,12 +59,12 @@ public class CommentsViewController extends Fragment {
             list.add(realmInteger.getValue());
             ranks.add(realmInteger.getValue().intValue());
         }
-        new StoryBatchRequest(list, new AbstractBatchRequest.JobCompleteListener<Story>() {
+        new StoryBatchRequest(list,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
                 StoryDao.addnewData(response);
             }
-        }, ranks).start();
+        }).start();
     }
 
 }

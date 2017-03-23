@@ -7,7 +7,7 @@ import io.realm.annotations.PrimaryKey;
  * Created by nishant on 15.03.17.
  */
 
-public class Stories extends RealmObject {
+public class StoryToFetch extends RealmObject {
 
     @PrimaryKey
     private Long id;

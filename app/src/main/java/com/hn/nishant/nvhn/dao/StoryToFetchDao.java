@@ -1,7 +1,7 @@
 package com.hn.nishant.nvhn.dao;
 
 import com.hn.nishant.nvhn.App;
-import com.hn.nishant.nvhn.model.Stories;
+import com.hn.nishant.nvhn.model.StoryToFetch;
 import com.hn.nishant.nvhn.model.Story;
 
 import java.util.List;
@@ -13,46 +13,46 @@ import io.realm.RealmResults;
  * Created by nishant on 18.03.17.
  */
 
-public class StoriesDao {
+public class StoryToFetchDao {
 
-    public static RealmResults<Stories> getStories() {
+    public static RealmResults<StoryToFetch> getStoriesToFetch() {
         return App.getRealm()
-                .where(Stories.class).findAllSortedAsync("rank");
+                .where(StoryToFetch.class).findAllSortedAsync("rank");
     }
 
-    public static void delete(final List<Story> response) {
+    public static void deleteFromRemainderList(final List<Story> response) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 for (Story s : response) {
                     Integer id = s.getId();
-                    Stories stories = realm.where(Stories.class).equalTo("id", id).findFirst();
-                    if (stories != null) {
-                        stories.deleteFromRealm();
+                    StoryToFetch storyToFetch = realm.where(StoryToFetch.class).equalTo("id", id).findFirst();
+                    if (storyToFetch != null) {
+                        storyToFetch.deleteFromRealm();
                     }
                 }
             }
         });
     }
 
-    public static void delete() {
+    public static void deleteFromRemainderList() {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                realm.delete(Stories.class);
+                realm.delete(StoryToFetch.class);
             }
         });
     }
 
-    public static void addToDb(final List<Long> list, final List<Long> ranks) {
-        Realm.getInstance(App.getConfig()).executeTransactionAsync(new Realm.Transaction() {
+    public static void add(final List<Long> list) {
+        App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                realm.delete(Stories.class);
+                realm.delete(StoryToFetch.class);
                 for (int i = 0; i < list.size(); i++) {
                     long id = list.get(i);
-                    Stories stories = realm.createObject(Stories.class, id);
-                    stories.setRank(ranks.get(i).intValue());
+                    StoryToFetch storyToFetch = realm.createObject(StoryToFetch.class, id);
+                    storyToFetch.setRank(i);
                 }
             }
         });

@@ -9,9 +9,9 @@ import android.support.annotation.Nullable;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
-import com.hn.nishant.nvhn.dao.StoriesDao;
+import com.hn.nishant.nvhn.dao.StoryToFetchDao;
 import com.hn.nishant.nvhn.dao.StoryDao;
-import com.hn.nishant.nvhn.model.Stories;
+import com.hn.nishant.nvhn.model.StoryToFetch;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.AbstractBatchRequest;
 import com.hn.nishant.nvhn.network.ResponseListener;
@@ -31,8 +31,7 @@ import io.realm.RealmResults;
  * Created by nishant on 15.03.17.
  */
 
-public class StoryViewController extends Fragment implements OrderedRealmCollectionChangeListener<RealmResults<Story>>,
-        DoneCallback<RealmResults<Stories>> {
+public class StoryViewController extends Fragment implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
 
     public static final String TAG = StoryViewController.class.getSimpleName();
 
@@ -40,11 +39,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     private RealmResults<Story> storiesList;
 
-    private RealmResults<Stories> remainingStoriesIds;
+    private RealmResults<StoryToFetch> remainingStoryToFetchIds;
 
-    private DeferredObject<RealmResults<Story>, Void, Void> deferredStoryFetch = new DeferredObject();
-
-    private DeferredObject<RealmResults<Stories>, Void, Void> deferredLeftStories = new DeferredObject();
+    private DeferredObject<RealmResults<Story>, Void, Void> deferredExistingStory = new DeferredObject();
 
     private OnDataLoadListener loadListener;
 
@@ -61,18 +58,10 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if(context instanceof OnDataLoadListener){
+        if (context instanceof OnDataLoadListener) {
             loadListener = (OnDataLoadListener) context;
-        }else{
+        } else {
             throw new IllegalStateException("activty must implement ondataloadlistener");
-        }
-    }
-
-    @Override
-    public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-        storiesList.removeChangeListener(this);
-        if(deferredStoryFetch.isPending()) {
-            deferredStoryFetch.resolve(collection);
         }
     }
 
@@ -84,9 +73,14 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             storiesList = StoryDao.getStoriesSortedByRank();
         }
         storiesList.addChangeListener(this);
-        remainingStoriesIds = StoriesDao.getStories();
-        remainingStoriesIds.addChangeListener(new StoriesChangeListener());
+        remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
         getLatestStories();
+    }
+
+    @Override
+    public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
+        storiesList.removeChangeListener(this);
+        deferredExistingStory.resolve(collection);
     }
 
     public RealmResults<Story> getStories() {
@@ -96,161 +90,124 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         return storiesList;
     }
 
-    private class StroyListResponseListener implements ResponseListener<List<Long>>  {
+    private class LiveStroyListResponseListener implements ResponseListener<List<Long>> {
 
-        private DeferredObject<List<Long>,Void,Void> deferredObject;
+        private DeferredObject<List<Long>, Void, Void> deferredLiveStoryList;
 
-        private StroyListResponseListener(DeferredObject<List<Long>,Void,Void> deferredObject){
-            this.deferredObject = deferredObject;
+        private LiveStroyListResponseListener(DeferredObject<List<Long>, Void, Void> deferredLiveStoryList) {
+            this.deferredLiveStoryList = deferredLiveStoryList;
         }
 
         @Override
         public void onSuccess(List<Long> list) {
-            deferredObject.resolve(list);
+            deferredLiveStoryList.resolve(list);
+            StoryToFetchDao.deleteFromRemainderList();
+            StoryToFetchDao.add(list);
         }
 
         @Override
         public void onError(Exception ex) {
-            if(loadListener != null){
-                loadListener.onLoadError(ex);
+            if (loadListener != null) {
+                loadListener.onLoadError(new Exception("Something went wrong"));
             }
         }
-    }
-
-    private void getNewStories(List<Long> list) {
-        int i = 0;
-        ArrayList<Long> res = new ArrayList<>();
-        ArrayList<Integer> ranks = new ArrayList<>();
-        for (; i < Math.min(15, list.size()); i++) {
-            res.add(list.get(i));
-            ranks.add(i);
-        }
-        new StoryBatchRequest(res, new AbstractBatchRequest.JobCompleteListener<Story>() {
-            @Override
-            public void onJobComplete(List<Story> response) {
-                StoryDao.addnewData(response);
-                if (loadListener != null) {
-                    if(response.size() != 0) {
-                        loadListener.onDataLoaded();
-                    }else{
-                        loadListener.onLoadError(new Exception("Something went wrong"));
-                    }
-                }
-            }
-        }, ranks).start();
-
-        ArrayList<Long> rem = new ArrayList<>();
-        ArrayList<Long> rankss = new ArrayList<>();
-        for (; i < list.size(); i++) {
-            rem.add(list.get(i));
-            rankss.add((long) i);
-        }
-        if (deferredLeftStories == null || !deferredLeftStories.isPending()) {
-            deferredLeftStories = new DeferredObject<>();
-        }
-        StoriesDao.addToDb(rem, rankss);
     }
 
     private void refreshList(List<Long> list) {
         ArrayList<Long> selectForUpdate = new ArrayList<>();
         final ArrayList<Integer> selectForDelete = new ArrayList<>();
-        final ArrayList<Integer> ranksForSelected = new ArrayList<>();
+        final ArrayList<Integer> ranks = new ArrayList<>();
         int i = 0;
-        for (; i < Math.min(list.size(), storiesList.size()); i++) {
+        for (; i < Math.min(Math.min(AbstractBatchRequest.getSuggestedReqCount(), list.size()), storiesList.size()); i++) {
             if (list.get(i).intValue() == storiesList.get(i).getId()) {
                 selectForUpdate.add(Long.valueOf(storiesList.get(i).getId()));
             } else {
                 selectForDelete.add(storiesList.get(i).getId());
                 selectForUpdate.add(list.get(i));
             }
-            ranksForSelected.add(i);
+            ranks.add(i);
+        }
+        for (; i < storiesList.size(); i++) {
+            selectForDelete.add(storiesList.get(i).getId());
         }
 
-        new StoryBatchRequest(selectForUpdate, new AbstractBatchRequest.JobCompleteListener<Story>() {
+        new StoryBatchRequest(selectForUpdate,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
-                StoryDao.addAndDelete(response, ranksForSelected, selectForDelete);
+                StoryDao.addAndDelete(response, selectForDelete);
+                StoryToFetchDao.deleteFromRemainderList(response);
                 if (loadListener != null) {
-                    if(response.size() != 0) {
-                        loadListener.onDataLoaded();
-                    }else{
-                        loadListener.onLoadError(new Exception("Something went wrong"));
-                    }
+                    loadListener.onDataLoaded();
                 }
             }
-        }, ranksForSelected).start();
-
-        ArrayList<Long> rem = new ArrayList<>();
-        ArrayList<Long> rankss = new ArrayList<>();
-        for (; i < list.size(); i++) {
-            rem.add(list.get(i));
-            rankss.add((long) i);
-        }
-        StoriesDao.addToDb(rem, rankss);
+        }).start();
     }
 
     public void getLatestStories() {
-        apiService.getStoryIds(storiesResponseListener);
+        deferredExistingStory.done(new DoneCallback<RealmResults<Story>>() {
+            @Override
+            public void onDone(RealmResults<Story> storyOnDevice) {
+                loadOrRefresh(storyOnDevice.size() !=0 );
+            }
+        });
     }
 
-    public void onRefreshRequest(){
-        DeferredObject<List<Long>,Void,Void> deferredObject = new DeferredObject<>();
-        apiService.getStoryIds();
+    private void loadOrRefresh(final boolean shouldReresh) {
+        DeferredObject<List<Long>, Void, Void> deferredLiveStoryIds = new DeferredObject<>();
+        apiService.getStoryIds(new LiveStroyListResponseListener(deferredLiveStoryIds));
+        deferredLiveStoryIds.done(new DoneCallback<List<Long>>() {
+            @Override
+            public void onDone(List<Long> liveStoryItemIds) {
+                if(shouldReresh) {
+                    refreshList(liveStoryItemIds);
+                }else{
+                    loadMore();
+                }
+            }
+        });
     }
 
-    public void loadMore(final int noOfItems) {
-        if (noOfItems <= 0) {
-            loadListener.onDataLoaded();
-            return;
-        }
-        deferredLeftStories.done(this);
+    public void loadMore() {
+        remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
+        remainingStoryToFetchIds.addChangeListener(new LoadFromRemainingStory());
     }
 
     public interface OnDataLoadListener {
         void onDataLoaded();
+
         void onLoadError(Exception ex);
     }
 
-    private class StoriesChangeListener implements OrderedRealmCollectionChangeListener<RealmResults<Stories>> {
+    private class LoadFromRemainingStory implements OrderedRealmCollectionChangeListener<RealmResults<StoryToFetch>> {
         @Override
-        public void onChange(RealmResults<Stories> collection, OrderedCollectionChangeSet changeSet) {
-            if (!deferredLeftStories.isResolved()) {
-                deferredLeftStories.resolve(collection);
+        public void onChange(RealmResults<StoryToFetch> remianingStory, OrderedCollectionChangeSet changeSet) {
+            remianingStory.removeChangeListener(this);
+            List<Long> req = new ArrayList<Long>();
+            List<Integer> ranks = new ArrayList<>();
+            for (int i = 0; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), remianingStory.size()); i++) {
+                req.add(remianingStory.get(i).getId());
+                ranks.add(remianingStory.get(i).getRank());
             }
-        }
-    }
-
-    @Override
-    public void onDone(RealmResults<Stories> collection) {
-        List<Long> req = new ArrayList<Long>();
-        List<Integer> ranks = new ArrayList<Integer>();
-        for (int i = 0; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), collection.size()); i++) {
-            req.add(collection.get(i).getId());
-            ranks.add(collection.get(i).getRank());
-        }
-        new StoryBatchRequest(req, new AbstractBatchRequest.JobCompleteListener<Story>() {
-            @Override
-            public void onJobComplete(List<Story> response) {
-                StoryDao.addnewData(response);
-                if (deferredLeftStories == null || !deferredLeftStories.isPending()) {
-                    deferredLeftStories = new DeferredObject<>();
+            new StoryBatchRequest(req,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
+                @Override
+                public void onJobComplete(List<Story> response) {
+                    StoryDao.addnewData(response);
+                    StoryToFetchDao.deleteFromRemainderList(response);
+                    if (loadListener != null) {
+                        loadListener.onDataLoaded();
+                    }
                 }
-                StoriesDao.delete(response);
-                loadListener.onDataLoaded();
-            }
-        }, ranks).start();
+            }).start();
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        if (deferredLeftStories.isPending()) {
-            deferredLeftStories.reject(null);
+        if (deferredExistingStory.isPending()) {
+            deferredExistingStory.reject(null);
         }
-        if (deferredStoryFetch.isPending()) {
-            deferredStoryFetch.reject(null);
-        }
-        remainingStoriesIds.removeAllChangeListeners();
+        remainingStoryToFetchIds.removeAllChangeListeners();
         storiesList.removeAllChangeListeners();
         loadListener = null;
     }

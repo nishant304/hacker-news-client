@@ -17,14 +17,14 @@ public class CommentsActivty extends BaseActivity {
 
     private CommentsViewController commentsViewController;
 
-    @BindView(R.id.recyclerView)
-    public RecyclerView recyclerView;
+    private RecyclerView recyclerView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         int id = getIntent().getIntExtra("storyId", 0);
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         commentsViewController = CommentsViewController.getInstance(getFragmentManager(), id);
         CommentsAdapter commentsAdapter = new CommentsAdapter(this, commentsViewController.getAllComments(id));
         recyclerView.setAdapter(commentsAdapter);

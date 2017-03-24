@@ -62,7 +62,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return itemList.size();
     }
 
-    class StoryHolder extends RecyclerView.ViewHolder {
+   static   class StoryHolder extends RecyclerView.ViewHolder {
 
         TextView text;
         TextView time;

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmObject;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 /**
@@ -26,8 +28,8 @@ public class StoryDao {
                 .findAllAsync();
     }
 
-    public static Story getStoryForId(int id) {
-        return App.getRealm().where(Story.class).equalTo("id", id).findFirst();
+    public static Story getStoryForId(int id,Realm realm) {
+        return realm.where(Story.class).equalTo("id", id).findFirst();
     }
 
     public static void addAndDelete(final List<Story> response, final List<Integer> delete) {
@@ -52,13 +54,13 @@ public class StoryDao {
         }
     }
 
-    public static void addnewData(final List<Story> response) {
+    public static void addnewData(final List<Story> response, Realm.Transaction.OnSuccess onSuccess) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 addData(response, realm);
             }
-        });
+        },onSuccess);
     }
 
     public static void delete(final List<Story> response) {

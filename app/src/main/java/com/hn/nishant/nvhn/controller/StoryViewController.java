@@ -25,6 +25,7 @@ import java.util.List;
 
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
+import io.realm.Realm;
 import io.realm.RealmResults;
 
 /**
@@ -151,6 +152,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     public void loadMore() {
+        //StoryDao.addDummy();
         remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
         remainingStoryToFetchIds.addChangeListener(new LoadFromRemainingStory());
     }
@@ -173,12 +175,16 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             }
             new StoryBatchRequest(req,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
                 @Override
-                public void onJobComplete(List<Story> response) {
-                    StoryDao.addnewData(response);
-                    StoryToFetchDao.deleteFromRemainderList(response);
-                    if (loadListener != null) {
-                        loadListener.onDataLoaded();
-                    }
+                public void onJobComplete(final List<Story> response) {
+                    StoryDao.addnewData(response,new Realm.Transaction.OnSuccess(){
+                        @Override
+                        public void onSuccess() {
+                            StoryToFetchDao.deleteFromRemainderList(response);
+                            if (loadListener != null) {
+                                loadListener.onDataLoaded();
+                            }
+                        }
+                    });
                 }
             }).start();
         }

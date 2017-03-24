@@ -5,6 +5,7 @@ import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
+import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.AbstractBatchRequest;
@@ -51,7 +52,7 @@ public class CommentsViewController extends Fragment {
     }
 
     private void getNewComments() {
-        Story story = StoryDao.getStoryForId(getArguments().getInt("id"));
+        Story story = StoryDao.getStoryForId(getArguments().getInt("id"), App.getRealm());
         RealmList<RealmInteger> commentsId = story.getKid();
         List<Long> list = new ArrayList<>();
         List<Integer> ranks = new ArrayList<>();
@@ -62,7 +63,7 @@ public class CommentsViewController extends Fragment {
         new StoryBatchRequest(list,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
-                StoryDao.addnewData(response);
+                StoryDao.addnewData(response,null);
             }
         }).start();
     }

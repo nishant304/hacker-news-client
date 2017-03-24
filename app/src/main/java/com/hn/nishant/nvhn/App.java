@@ -45,6 +45,10 @@ public class App extends Application {
     }
 
     public static RealmConfiguration getConfig() {
+        if(config == null){
+            config = new RealmConfiguration.Builder().deleteRealmIfMigrationNeeded()
+                    .build();
+        }
         return config;
     }
 

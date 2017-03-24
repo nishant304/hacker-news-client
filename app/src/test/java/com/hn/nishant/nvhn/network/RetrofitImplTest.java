@@ -1,5 +1,7 @@
 package com.hn.nishant.nvhn.network;
 
+import com.google.firebase.FirebaseApp;
+import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.BuildConfig;
 import com.hn.nishant.nvhn.HNTestRunner;
 import com.hn.nishant.nvhn.model.Story;
@@ -13,19 +15,26 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.util.ActivityController;
 
 /**
  * Created by nishant on 21.03.17.
  */
-@Config(constants = RetrofitImplTest.CustomBuildConfig.class)
-@RunWith(HNTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class ,sdk =22)
+@PrepareForTest({FirebaseApp.class})
 public class RetrofitImplTest {
 
     @Mock
     private StoryActivity storyActivity;
+
+    @Mock
+    private FirebaseApp firebaseApp;
 
     @Mock
     private RetrofitImpl retrofit;
@@ -35,6 +44,7 @@ public class RetrofitImplTest {
 
     @Before
     public void setUp(){
+        PowerMockito.mockStatic(FirebaseApp.class);
         MockitoAnnotations.initMocks(this);
         ActivityController<StoryActivity> controller = Robolectric.buildActivity(StoryActivity.class);
         storyActivity = controller.get();

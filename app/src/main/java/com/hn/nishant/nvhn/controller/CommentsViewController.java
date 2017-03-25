@@ -15,6 +15,7 @@ import com.hn.nishant.nvhn.util.RealmInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
@@ -63,7 +64,12 @@ public class CommentsViewController extends Fragment {
         new StoryBatchRequest(list,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
-                StoryDao.addnewData(response,null);
+                StoryDao.addnewData(response, new Realm.Transaction.OnSuccess() {
+                    @Override
+                    public void onSuccess() {
+
+                    }
+                });
             }
         }).start();
     }

@@ -19,6 +19,11 @@ public class CommentsAdapter extends StoryAdapter {
     }
 
     @Override
+    public int getItemViewType(int position) {
+        return 1;
+    }
+
+    @Override
     public StoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         return new StoryHolder(getInflater().inflate(R.layout.comments_item_view, parent, false));
     }

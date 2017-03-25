@@ -85,12 +85,12 @@ public abstract class AbstractBatchRequest<T> {
 
     private void adjustSuggestedReqCount() {
         long duration = System.currentTimeMillis() - startTime;
-        if (duration < 500) {
+        if (duration < 1000) {
             suggestedReqCount++;
         } else {
             suggestedReqCount--;
         }
-        suggestedReqCount = Math.min(10, suggestedReqCount);
+        suggestedReqCount = Math.min(15, suggestedReqCount);
         suggestedReqCount = Math.max(5, suggestedReqCount);
     }
 

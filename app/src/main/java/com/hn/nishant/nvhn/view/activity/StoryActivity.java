@@ -64,10 +64,8 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     @Override
     public void onDataLoaded() {
-        System.out.println("on data loaded");
         isLoading = false;
         swipeRefreshLayout.setRefreshing(false);
-        makeToast("scroll to load more");
     }
 
     @Override
@@ -84,7 +82,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int visibleItems = layoutManager.getChildCount();
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
-            if (dy > 0 && !isLoading && visibleItems + firstVisibleItem + 3 >= totalItems) {
+            if (dy > 0 && !isLoading && visibleItems + firstVisibleItem >= totalItems) {
                 isLoading = true;
                 storyViewController.loadMore();
             }

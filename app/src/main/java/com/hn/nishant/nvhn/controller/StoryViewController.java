@@ -125,7 +125,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         deferredExistingStory.done(new DoneCallback<RealmResults<Story>>() {
             @Override
             public void onDone(RealmResults<Story> storyOnDevice) {
-                loadOrRefresh(storyOnDevice.size() !=0 );
+                loadOrRefresh(storyOnDevice.size() >=5  );
             }
         });
     }
@@ -152,7 +152,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     public void loadMore() {
-        //StoryDao.addDummy();
+        StoryDao.addDummy();
         remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
         remainingStoryToFetchIds.addChangeListener(new LoadFromRemainingStory());
     }
@@ -197,7 +197,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             deferredExistingStory.reject(null);
         }
         remainingStoryToFetchIds.removeAllChangeListeners();
-        storiesList.removeAllChangeListeners();
+        storiesList.removeChangeListener(this);
         loadListener = null;
     }
 

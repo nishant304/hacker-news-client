@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.hn.nishant.nvhn.R;
@@ -34,11 +35,22 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     @Override
     public StoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        if(viewType == 2){
+            return new ProgressBarHolder(inflater.inflate(R.layout.progress_layout, parent, false));
+        }
         return new StoryHolder(inflater.inflate(R.layout.story_item_view, parent, false));
     }
 
     @Override
+    public int getItemViewType(int position) {
+        return itemList.get(position).getId() == 1000? 2:1;
+    }
+
+    @Override
     public void onBindViewHolder(final StoryHolder holder, int position) {
+        if(holder instanceof ProgressBarHolder){
+            return;
+        }
         holder.text.setText(itemList.get(position).getTitle());
         holder.time.setText("by " + itemList.get(position).getBy());
         holder.comments.setText(itemList.get(position).getDescendants() + " comments");
@@ -77,6 +89,16 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         }
     }
 
+    static   class ProgressBarHolder extends StoryHolder {
+
+        ProgressBar progressBar;
+
+        ProgressBarHolder(View view) {
+            super(view);
+            progressBar = (ProgressBar) view.findViewById(R.id.progress);
+        }
+    }
+
     protected LayoutInflater getInflater() {
         return inflater;
     }
@@ -97,12 +119,16 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
         if (changeSet != null && changeSet.getInsertionRanges().length == 1
-                && changeSet.getDeletionRanges().length == 0
+                && changeSet.getDeletionRanges().length == 1
                 && changeSet.getChangeRanges().length == 0) {
 
             for (int i = 0; i < changeSet.getInsertionRanges().length; i++) {
                 notifyItemRangeInserted(changeSet.getInsertionRanges()[i].startIndex,
                         changeSet.getInsertionRanges()[i].length);
+            }
+            for (int i = 0; i < changeSet.getDeletionRanges().length; i++) {
+                notifyItemRangeInserted(changeSet.getDeletionRanges()[i].startIndex,
+                        changeSet.getDeletionRanges()[i].length);
             }
         } else {
             notifyDataSetChanged();

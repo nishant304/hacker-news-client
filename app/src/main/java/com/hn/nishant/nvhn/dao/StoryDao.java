@@ -17,6 +17,29 @@ import io.realm.RealmResults;
 
 public class StoryDao {
 
+    public static void addDummy(){
+        App.getRealm().executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                Story story = new Story();
+                story.setRank(1000);
+                story.setId(1000);
+                story.setBy("me");
+                story.setType("story");
+                story.setTitle("please");
+                realm.copyToRealmOrUpdate(story);
+                System.out.println("");
+            }
+        });
+    }
+
+    public static void deleteDummy(){
+        Story story = App.getRealm().where(Story.class).equalTo("id",1000).findFirst();
+        if(story != null){
+            story.deleteFromRealm();
+        }
+    }
+
     public static RealmResults<Story> getStoriesSortedByRank() {
         return App.getRealm().where(Story.class).equalTo("type", "story").findAllSortedAsync("rank");
     }
@@ -58,6 +81,7 @@ public class StoryDao {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
+                deleteDummy();
                 addData(response, realm);
             }
         },onSuccess);

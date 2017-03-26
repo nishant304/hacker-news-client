@@ -44,7 +44,7 @@ public class StoryToFetchDao {
         });
     }
 
-    public static void add(final List<Long> list) {
+    public static void add(final List<Long> list, Realm.Transaction.OnSuccess onSuccess) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -55,7 +55,7 @@ public class StoryToFetchDao {
                     storyToFetch.setRank(i);
                 }
             }
-        });
+        },onSuccess);
     }
 
 }

@@ -133,13 +133,17 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     private void loadOrRefresh(final boolean shouldReresh) {
         apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
-            public void onSuccess(List<Long> liveStoryItemIds) {
-                StoryToFetchDao.add(liveStoryItemIds);
-                if(shouldReresh) {
-                    refreshList(liveStoryItemIds);
-                }else{
-                    loadMore();
-                }
+            public void onSuccess(final List<Long> liveStoryItemIds) {
+                StoryToFetchDao.add(liveStoryItemIds, new Realm.Transaction.OnSuccess() {
+                    @Override
+                    public void onSuccess() {
+                        if(shouldReresh) {
+                            refreshList(liveStoryItemIds);
+                        }else{
+                            loadMore();
+                        }
+                    }
+                });
             }
 
             @Override

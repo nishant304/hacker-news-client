@@ -24,6 +24,8 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    private StoryAdapter storyAdapter;
+
     private boolean isLoading = false;
 
     @Override
@@ -46,7 +48,8 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(new StoryAdapter(this, storyViewController.getStories()));
+        storyAdapter = new StoryAdapter(this, storyViewController.getStories());
+        recyclerView.setAdapter(storyAdapter);
         layoutManager.scrollToPosition(pos);
     }
 
@@ -87,6 +90,12 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
                 storyViewController.loadMore();
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        storyAdapter.onDestroy();
+        super.onDestroy();
     }
 
     @VisibleForTesting

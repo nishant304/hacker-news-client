@@ -139,7 +139,12 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
         itemList.removeAllChangeListeners();
+        System.out.println("listener detached");
     }
 
+    @Override
+    public void onViewDetachedFromWindow(StoryHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+    }
 }
 

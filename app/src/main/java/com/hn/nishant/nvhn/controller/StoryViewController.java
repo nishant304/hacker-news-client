@@ -197,7 +197,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             deferredExistingStory.reject(null);
         }
         remainingStoryToFetchIds.removeAllChangeListeners();
-        storiesList.removeChangeListener(this);
+        storiesList.removeAllChangeListeners();
         loadListener = null;
     }
 

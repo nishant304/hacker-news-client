@@ -13,6 +13,8 @@ import com.hn.nishant.nvhn.R;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.activity.CommentsActivty;
 
+import java.util.List;
+
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.RealmResults;
@@ -35,7 +37,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     @Override
     public StoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if(viewType == 2){
+        if (viewType == 2) {
             return new ProgressBarHolder(inflater.inflate(R.layout.progress_layout, parent, false));
         }
         return new StoryHolder(inflater.inflate(R.layout.story_item_view, parent, false));
@@ -43,25 +45,26 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     @Override
     public int getItemViewType(int position) {
-        return itemList.get(position).getId() == 1000? 2:1;
+        return itemList.get(position).getId() == 1000 ? 2 : 1;
+    }
+
+    @Override
+    public void onBindViewHolder(StoryHolder holder, int position, List<Object> payloads) {
+        if(payloads.size() ==0) {
+            onBindViewHolder(holder,position);
+        }else{
+            holder.comments.setText((Integer) payloads.get(0)+"");
+        }
     }
 
     @Override
     public void onBindViewHolder(final StoryHolder holder, int position) {
-        if(holder instanceof ProgressBarHolder){
+        if (holder instanceof ProgressBarHolder) {
             return;
         }
         holder.text.setText(itemList.get(position).getTitle());
         holder.time.setText("by " + itemList.get(position).getBy());
         holder.comments.setText(itemList.get(position).getDescendants() + " comments");
-        holder.comments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), CommentsActivty.class);
-                intent.putExtra("storyId", itemList.get(holder.getAdapterPosition()).getId());
-                v.getContext().startActivity(intent);
-            }
-        });
     }
 
     @Override
@@ -74,22 +77,31 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return itemList.size();
     }
 
-   static   class StoryHolder extends RecyclerView.ViewHolder {
+    class StoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView text;
         TextView time;
         TextView comments;
-        TextView score;
 
         StoryHolder(View view) {
             super(view);
             text = (TextView) view.findViewById(R.id.article_title);
             time = (TextView) view.findViewById(R.id.article_time);
             comments = (TextView) view.findViewById(R.id.article_comments);
+            if(comments != null) {
+                comments.setOnClickListener(this);
+            }
+        }
+
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(v.getContext(), CommentsActivty.class);
+            intent.putExtra("storyId",getItemAtPosition(getAdapterPosition()).getId());
+            v.getContext().startActivity(intent);
         }
     }
 
-    static   class ProgressBarHolder extends StoryHolder {
+    class ProgressBarHolder extends StoryHolder {
 
         ProgressBar progressBar;
 
@@ -103,39 +115,35 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return inflater;
     }
 
-    protected Story getItemAtPosition(int pos) {
+    public Story getItemAtPosition(int pos) {
         return itemList.get(pos);
     }
 
-
-    /***
-     *
-     * @param collection
-     * @param changeSet
-     * while it is awesome to notify the adapter about items changed it comes at cost of
-     * draw and layout perfroamnce cost if there are too many changes specially on refresh,so
-     * lets this keep this implementation for insertions only
-     */
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-        if (changeSet != null && changeSet.getInsertionRanges().length == 1
-                && changeSet.getDeletionRanges().length == 1
-                && changeSet.getChangeRanges().length == 0) {
+        if (changeSet != null) {
 
             for (int i = 0; i < changeSet.getInsertionRanges().length; i++) {
                 notifyItemRangeInserted(changeSet.getInsertionRanges()[i].startIndex,
                         changeSet.getInsertionRanges()[i].length);
             }
-            for (int i = 0; i < changeSet.getDeletionRanges().length; i++) {
-                notifyItemRangeInserted(changeSet.getDeletionRanges()[i].startIndex,
+            for (int i = changeSet.getDeletionRanges().length - 1; i >= 0; i--) {
+                notifyItemRangeRemoved(changeSet.getDeletionRanges()[i].startIndex,
                         changeSet.getDeletionRanges()[i].length);
             }
+
+            for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
+                for(int j=changeSet.getChangeRanges()[i].startIndex;j<changeSet.getChangeRanges()[i].length;j++){
+                    notifyItemChanged(j,collection.get(j).getDescendants());
+                }
+            }
+
         } else {
             notifyDataSetChanged();
         }
     }
 
-    public void onDestroy(){
+    public void onDestroy() {
         itemList.removeChangeListener(this);
     }
 

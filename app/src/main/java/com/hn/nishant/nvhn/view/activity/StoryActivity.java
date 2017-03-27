@@ -1,18 +1,22 @@
 package com.hn.nishant.nvhn.view.activity;
 
+import android.content.Intent;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
+import android.view.View;
 
 import com.hn.nishant.nvhn.R;
 import com.hn.nishant.nvhn.controller.StoryViewController;
+import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
 import com.hn.nishant.nvhn.view.ui.LinearLayoutManager;
 
-public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener, StoryViewController.OnDataLoadListener {
+public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener,
+        StoryViewController.OnDataLoadListener,View.OnClickListener {
 
     private LinearLayoutManager layoutManager;
 
@@ -43,9 +47,9 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private void setUpRecyclerView(){
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.addOnScrollListener(new ScrollListener());
         recyclerView.setHasFixedSize(true);
+        recyclerView.getRecycledViewPool().setMaxRecycledViews(1,20);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         storyAdapter = new StoryAdapter(this, storyViewController.getStories());
@@ -90,6 +94,11 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
                 storyViewController.loadMore();
             }
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+
     }
 
     @Override

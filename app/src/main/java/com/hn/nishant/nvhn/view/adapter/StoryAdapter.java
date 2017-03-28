@@ -85,7 +85,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
         TextView text;
         TextView time;
-        TextView comments;
+        public TextView comments;
 
         StoryHolder(View view) {
             super(view);

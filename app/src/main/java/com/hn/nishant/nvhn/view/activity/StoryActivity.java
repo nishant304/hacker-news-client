@@ -46,13 +46,15 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private void setUpRecyclerView(){
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        layoutManager = new LinearLayoutManager(this);
+        storyAdapter = new StoryAdapter(this, storyViewController.getStories());
+
         recyclerView.addOnScrollListener(new ScrollListener());
         recyclerView.setHasFixedSize(true);
         recyclerView.getRecycledViewPool().setMaxRecycledViews(1,20);
-        layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        storyAdapter = new StoryAdapter(this, storyViewController.getStories());
         recyclerView.setAdapter(storyAdapter);
+        recyclerView.setItemAnimator(new ChangeItemAnimator());
         layoutManager.scrollToPosition(pos);
     }
 

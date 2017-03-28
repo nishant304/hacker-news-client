@@ -2,6 +2,7 @@ package com.hn.nishant.nvhn.view.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.hn.nishant.nvhn.R;
+import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.activity.CommentsActivty;
 
@@ -29,6 +31,8 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     private RealmResults<Story> itemList;
 
+    private ArrayMap<Integer,Integer> changeTracker = new ArrayMap<>();
+
     public StoryAdapter(Context context, RealmResults<Story> itemList) {
         inflater = LayoutInflater.from(context);
         this.itemList = itemList;
@@ -45,15 +49,15 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     @Override
     public int getItemViewType(int position) {
-        return itemList.get(position).getId() == 1000 ? 2 : 1;
+        return itemList.get(position).getId() == StoryDao.DEFALUT_ITEM_ID ? 2 : 1;
     }
 
     @Override
     public void onBindViewHolder(StoryHolder holder, int position, List<Object> payloads) {
-        if(payloads.size() ==0) {
-            onBindViewHolder(holder,position);
-        }else{
-            holder.comments.setText((Integer) payloads.get(0)+"");
+        if (payloads.size() == 0) {
+            onBindViewHolder(holder, position);
+        } else {
+            holder.comments.setText((Integer) payloads.get(0) + " comments");
         }
     }
 
@@ -77,7 +81,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return itemList.size();
     }
 
-    class StoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class StoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView text;
         TextView time;
@@ -88,7 +92,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             text = (TextView) view.findViewById(R.id.article_title);
             time = (TextView) view.findViewById(R.id.article_time);
             comments = (TextView) view.findViewById(R.id.article_comments);
-            if(comments != null) {
+            if (comments != null) {
                 comments.setOnClickListener(this);
             }
         }
@@ -96,7 +100,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(v.getContext(), CommentsActivty.class);
-            intent.putExtra("storyId",getItemAtPosition(getAdapterPosition()).getId());
+            intent.putExtra("storyId", getItemAtPosition(getAdapterPosition()).getId());
             v.getContext().startActivity(intent);
         }
     }
@@ -115,7 +119,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         return inflater;
     }
 
-    public Story getItemAtPosition(int pos) {
+    protected Story getItemAtPosition(int pos) {
         return itemList.get(pos);
     }
 
@@ -133,18 +137,35 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             }
 
             for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
-                for(int j=changeSet.getChangeRanges()[i].startIndex;j<changeSet.getChangeRanges()[i].length;j++){
-                    notifyItemChanged(j,collection.get(j).getDescendants());
+                for (int j = changeSet.getChangeRanges()[i].startIndex; j < changeSet.getChangeRanges()[i].length; j++) {
+                    if (isChanged(collection.get(j).getId(),collection.get(j).getDescendants())){
+                        notifyItemChanged(j, collection.get(j).getDescendants());
+                    }
                 }
             }
 
         } else {
             notifyDataSetChanged();
         }
+        updateChangeTracker();
     }
 
     public void onDestroy() {
         itemList.removeChangeListener(this);
+    }
+
+    private void updateChangeTracker() {
+        changeTracker.clear();
+        for (int i = 0; i < itemList.size(); i++) {
+            changeTracker.put(itemList.get(i).getId(), itemList.get(i).getDescendants());
+        }
+    }
+
+    private boolean isChanged(int id, int newVal) {
+        if (changeTracker.get(id) == null) {
+            return true;
+        }
+        return changeTracker.get(id) != newVal;
     }
 
 }

@@ -17,13 +17,15 @@ import io.realm.RealmResults;
 
 public class StoryDao {
 
+    public static final int DEFALUT_ITEM_ID = 1000;
+
     public static void addDummy(){
         App.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 Story story = new Story();
-                story.setRank(1000);
-                story.setId(1000);
+                story.setRank(DEFALUT_ITEM_ID);
+                story.setId(DEFALUT_ITEM_ID);
                 story.setBy("me");
                 story.setType("story");
                 story.setTitle("please");
@@ -34,7 +36,7 @@ public class StoryDao {
     }
 
     public static void deleteDummy(){
-        Story story = App.getRealm().where(Story.class).equalTo("id",1000).findFirst();
+        Story story = App.getRealm().where(Story.class).equalTo("id",DEFALUT_ITEM_ID).findFirst();
         if(story != null){
             story.deleteFromRealm();
         }
@@ -73,7 +75,6 @@ public class StoryDao {
             } catch (Exception e) {
 
             }
-            System.out.println("data changed from copy");
         }
     }
 

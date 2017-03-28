@@ -1,10 +1,13 @@
 package com.hn.nishant.nvhn;
 
 import android.app.Application;
+import android.content.Context;
 
 import com.google.firebase.FirebaseApp;
 import com.hn.nishant.nvhn.api.ApiService;
 import com.hn.nishant.nvhn.network.FireBaseImpl;
+import com.squareup.leakcanary.LeakCanary;
+import com.squareup.leakcanary.RefWatcher;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -25,9 +28,22 @@ public class App extends Application {
 
     private static ApiService apiService;
 
+    public static RefWatcher getRefWatcher(Context context) {
+        App application = (App) context.getApplicationContext();
+        return application.refWatcher;
+    }
+
+    private RefWatcher refWatcher;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            // This process is dedicated to LeakCanary for heap analysis.
+            // You should not init your app in this process.
+            return;
+        }
+        refWatcher = LeakCanary.install(this);
         FirebaseApp.initializeApp(this);
         Realm.init(this);
         retrofit = new Retrofit.Builder()

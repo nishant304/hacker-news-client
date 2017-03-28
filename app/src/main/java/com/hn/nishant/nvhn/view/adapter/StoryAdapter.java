@@ -29,7 +29,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     private LayoutInflater inflater;
 
-    private RealmResults<Story> itemList;
+    protected RealmResults<Story> itemList;
 
     private ArrayMap<Integer,Integer> changeTracker = new ArrayMap<>();
 

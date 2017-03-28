@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import com.hn.nishant.nvhn.R;
 import com.hn.nishant.nvhn.model.Story;
 
+import io.realm.OrderedCollectionChangeSet;
 import io.realm.RealmResults;
 
 /**
@@ -33,4 +34,10 @@ public class CommentsAdapter extends StoryAdapter {
         holder.text.setText(getItemAtPosition(position).getText());
         holder.time.setText("by " + getItemAtPosition(position).getBy());
     }
+
+    @Override
+    public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
+        notifyDataSetChanged();
+    }
+
 }

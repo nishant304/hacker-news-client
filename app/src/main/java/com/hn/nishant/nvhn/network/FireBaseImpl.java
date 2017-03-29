@@ -58,7 +58,11 @@ public class FireBaseImpl implements ApiService {
                         Story story = dataSnapshot.getValue(Story.class);
                         HashMap<String, Object> hm = (HashMap<String, Object>) dataSnapshot.getValue();
                         setCommentsId(story,hm);
-                        responseListener.onSuccess(story);
+                        if(story != null) {
+                            responseListener.onSuccess(story);
+                        }else{
+                            responseListener.onError(new Exception("something went wrong"));
+                        }
                     }
 
                     @Override
@@ -76,6 +80,9 @@ public class FireBaseImpl implements ApiService {
      * @param hm
      */
     private void setCommentsId(Story story, HashMap<String,Object> hm){
+        if(hm == null){
+            return;
+        }
         ArrayList<Long> kids = (ArrayList<Long>) hm.get("kids");
         if (kids != null) {
             RealmList<RealmInteger> realmKids = new RealmList<>();

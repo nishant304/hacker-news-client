@@ -71,8 +71,8 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
         normalToReverseAnim.setInterpolator(interPolator);
         normalToReverseAnim.setDuration(DEFAULT_ANIM_DURATION);
 
-        final String newText = ((CommentsInfo)postInfo).commentText.toString();
-        String oldText = ((CommentsInfo)preInfo).commentText.toString();
+        final String newText = ((CommentsInfo) postInfo).commentText;
+        String oldText = ((CommentsInfo) preInfo).commentText;
         ((StoryAdapter.StoryHolder) newHolder).comments.setText(oldText);
 
         AnimatorSet animatorSet = new AnimatorSet();

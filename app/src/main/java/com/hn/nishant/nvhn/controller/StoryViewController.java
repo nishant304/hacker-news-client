@@ -201,12 +201,16 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         @Override
         public void onJobComplete(final List<Story> response) {
             if (isRefresh) {
-                StoryToFetchDao.deleteFromRemainderList(response);
-                StoryDao.addAndDelete(response, selectForDelete);
-                OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();
-                if (loadListener != null) {
-                    loadListener.onDataLoaded();
-                }
+                StoryDao.addAndDelete(response, selectForDelete, new Realm.Transaction.OnSuccess() {
+                    @Override
+                    public void onSuccess() {
+                        StoryToFetchDao.deleteFromRemainderList(response);
+                        OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();
+                        if (loadListener != null) {
+                            loadListener.onDataLoaded();
+                        }
+                    }
+                });
             } else {
                 StoryDao.addnewData(response, new Realm.Transaction.OnSuccess() {
                     @Override

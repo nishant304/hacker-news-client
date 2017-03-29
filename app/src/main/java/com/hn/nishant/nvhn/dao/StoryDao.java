@@ -57,14 +57,14 @@ public class StoryDao {
         return realm.where(Story.class).equalTo("id", id).findFirst();
     }
 
-    public static void addAndDelete(final List<Story> response, final List<Integer> delete) {
+    public static void addAndDelete(final List<Story> response, final List<Integer> delete, Realm.Transaction.OnSuccess onSuccess) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 delData(delete, realm);
                 addData(response, realm);
             }
-        });
+        },onSuccess);
     }
 
     private static void addData(List<Story> response, Realm realm) {

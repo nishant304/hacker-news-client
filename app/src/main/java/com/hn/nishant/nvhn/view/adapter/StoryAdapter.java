@@ -31,8 +31,8 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
     protected RealmResults<Story> itemList;
 
-    private ArrayMap<Integer,Integer> changeTracker = new ArrayMap<>();
-    private ArrayMap<Integer,Integer> posTracker = new ArrayMap<>();
+    private ArrayMap<Integer, Integer> changeTracker = new ArrayMap<>();
+    private ArrayMap<Integer, Integer> posTracker = new ArrayMap<>();
 
     public StoryAdapter(Context context, RealmResults<Story> itemList) {
         inflater = LayoutInflater.from(context);
@@ -140,10 +140,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
             for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
                 for (int j = changeSet.getChangeRanges()[i].startIndex; j < changeSet.getChangeRanges()[i].length; j++) {
-                    if(posTracker.get(j).intValue() != collection.get(j).getId().intValue()){
-                        notifyItemChanged(j);
-                        System.out.println("item changed" + collection.get(j).getTitle());
-                    }else if (isChanged(collection.get(j).getId(), collection.get(j).getDescendants())) {
+                    if (isChanged(collection.get(j).getId(), collection.get(j).getDescendants())) {
                         notifyItemChanged(j, collection.get(j).getDescendants());
                     }
                 }
@@ -164,11 +161,14 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         posTracker.clear();
         for (int i = 0; i < itemList.size(); i++) {
             changeTracker.put(itemList.get(i).getId(), itemList.get(i).getDescendants());
-            posTracker.put(i,itemList.get(i).getId());
+            posTracker.put(i, itemList.get(i).getId());
         }
     }
 
     private boolean isChanged(int id, int newVal) {
+        if (changeTracker.get(id) == null) {
+            return true;
+        }
         return changeTracker.get(id).intValue() != newVal;
     }
 

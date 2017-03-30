@@ -2,6 +2,7 @@ package com.hn.nishant.nvhn.dao;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.model.Story;
+import com.hn.nishant.nvhn.util.ObjectPool;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,20 +63,9 @@ public class StoryDao {
             @Override
             public void execute(Realm realm) {
                 delData(delete, realm);
-                addData(response, realm);
+                realm.copyToRealmOrUpdate(response);
             }
         },onSuccess);
-    }
-
-    private static void addData(List<Story> response, Realm realm) {
-        for (int i = 0; i < response.size(); i++) {
-            try {
-                Story story = response.get(i);
-                realm.copyToRealmOrUpdate(story);
-            } catch (Exception e) {
-
-            }
-        }
     }
 
     public static void addnewData(final List<Story> response, Realm.Transaction.OnSuccess onSuccess) {
@@ -83,7 +73,7 @@ public class StoryDao {
             @Override
             public void execute(Realm realm) {
                 deleteDummy();
-                addData(response, realm);
+                realm.copyToRealmOrUpdate(response);
             }
         },onSuccess);
     }
@@ -106,6 +96,7 @@ public class StoryDao {
             try {
                 Story story = realm.where(Story.class).equalTo("id", list.get(i)).findFirst();
                 story.deleteFromRealm();
+                ObjectPool.getObjectPool().putStory(story);
             } catch (Exception e) {
 
             }

@@ -36,10 +36,11 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         setContentView(R.layout.activity_main);
         if (savedInstanceState != null) {
             pos = savedInstanceState.getInt("pos");
+            isLoading = savedInstanceState.getBoolean("loading");
         }
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
         swipeRefreshLayout.setOnRefreshListener(this);
-        swipeRefreshLayout.setRefreshing(true);
+        swipeRefreshLayout.setRefreshing(isLoading);
         storyViewController = StoryViewController.getInstance(getFragmentManager());
         setUpRecyclerView();
     }
@@ -61,11 +62,15 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt("pos", layoutManager.findFirstVisibleItemPosition());
+        outState.putBoolean("loading",isLoading);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onRefresh() {
+        if(isLoading){
+            return;
+        }
         isLoading = true;
         storyViewController.getLatestStories();
     }

@@ -77,13 +77,13 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         }
         storiesList.addChangeListener(this);
         getLatestStories();
-        i = 0;
     }
 
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
-        storiesList.removeChangeListener(this);
-        deferredExistingStory.resolve(collection);
+        if(deferredExistingStory.isPending()) {
+            deferredExistingStory.resolve(collection);
+        }
     }
 
     public RealmResults<Story> getStories() {
@@ -109,7 +109,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                     StoryViewController.this.liveStoryItemIds = liveStoryItemIds;
                     i = 0;
                     refreshList(liveStoryItemIds);
-
             }
 
             @Override
@@ -131,18 +130,10 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         ArrayList<Long> itemToBeFetchedList = new ArrayList<>();
         ArrayList<Integer> itemsToDelList = new ArrayList<>();
         ArrayList<Integer> ranks = new ArrayList<>();
-        HashMap<Integer,Boolean> hashMap = new HashMap<>();
 
         for (; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(),liveStoryItemIds.size()); i++) {
                 itemToBeFetchedList.add(liveStoryItemIds.get(i));
                 ranks.add(i);
-                hashMap.put(liveStoryItemIds.get(i).intValue(),true);
-        }
-        for (Story story : storiesList) {
-            int id = story.getId();
-            if(hashMap.get(id) == null) {
-                itemsToDelList.add(id);
-            }
         }
 
         new StoryBatchRequest(itemToBeFetchedList, ranks,

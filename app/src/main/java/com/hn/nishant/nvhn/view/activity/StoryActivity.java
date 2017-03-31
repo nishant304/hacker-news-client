@@ -28,7 +28,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private StoryAdapter storyAdapter;
 
-    private boolean isLoading = false;
+    private boolean isLoading = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +39,9 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         }
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
         swipeRefreshLayout.setOnRefreshListener(this);
+        swipeRefreshLayout.setRefreshing(true);
         storyViewController = StoryViewController.getInstance(getFragmentManager());
         setUpRecyclerView();
-        App.getRefWatcher(this).watch(this);
     }
 
     private void setUpRecyclerView(){
@@ -90,7 +90,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int visibleItems = layoutManager.getChildCount();
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
-            if (dy > 0 && !isLoading && visibleItems + firstVisibleItem >= totalItems) {
+            if (dy > 0 && !isLoading && visibleItems + firstVisibleItem +5>= totalItems) {
                 isLoading = true;
                 storyViewController.loadMore();
             }

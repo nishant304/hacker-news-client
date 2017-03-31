@@ -140,8 +140,12 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
             for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
                 for (int j = changeSet.getChangeRanges()[i].startIndex; j < changeSet.getChangeRanges()[i].length; j++) {
-                    if (isChanged(collection.get(j).getId(), collection.get(j).getDescendants())) {
-                        notifyItemChanged(j, collection.get(j).getDescendants());
+                    if(posTracker.get(j).intValue() == collection.get(j).getId()) {
+                        if (isChanged(collection.get(j).getId(), collection.get(j).getDescendants())) {
+                            notifyItemChanged(j, collection.get(j).getDescendants());
+                        }
+                    }else{
+                        notifyItemChanged(j);
                     }
                 }
             }
@@ -161,7 +165,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         posTracker.clear();
         for (int i = 0; i < itemList.size(); i++) {
             changeTracker.put(itemList.get(i).getId(), itemList.get(i).getDescendants());
-            posTracker.put(i, itemList.get(i).getId());
+            posTracker.put(i,itemList.get(i).getId());
         }
     }
 

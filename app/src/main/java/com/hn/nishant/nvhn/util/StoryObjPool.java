@@ -3,23 +3,21 @@ package com.hn.nishant.nvhn.util;
 import com.hn.nishant.nvhn.model.Story;
 
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
 /**
  * Created by nishant on 29.03.17.
  */
 
-public class ObjectPool {
+public class StoryObjPool {
 
     private Stack<SoftReference<Story>> stack = new Stack<>();
 
-    public static ObjectPool getObjectPool() {
-        return objectPool;
+    public static StoryObjPool getInstance() {
+        return storyObjPool;
     }
 
-    private static ObjectPool objectPool = new ObjectPool();
+    private static StoryObjPool storyObjPool = new StoryObjPool();
 
     public Story getStory(){
         if(stack.isEmpty()){

@@ -9,20 +9,18 @@ import android.support.annotation.Nullable;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
-import com.hn.nishant.nvhn.dao.StoryToFetchDao;
 import com.hn.nishant.nvhn.dao.StoryDao;
-import com.hn.nishant.nvhn.model.StoryToFetch;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.AbstractBatchRequest;
 import com.hn.nishant.nvhn.network.ResponseListener;
 import com.hn.nishant.nvhn.network.StoryBatchRequest;
-import com.squareup.leakcanary.RefWatcher;
 
 import org.jdeferred.DoneCallback;
 import org.jdeferred.impl.DeferredObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.realm.OrderedCollectionChangeSet;
@@ -42,11 +40,13 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     private RealmResults<Story> storiesList;
 
-    private RealmResults<StoryToFetch> remainingStoryToFetchIds;
-
     private DeferredObject<RealmResults<Story>, Void, Void> deferredExistingStory = new DeferredObject();
 
     private OnDataLoadListener loadListener;
+
+    private List<Long> liveStoryItemIds = new ArrayList<>();
+
+    private int i = 0;
 
     public static StoryViewController getInstance(@NonNull FragmentManager fragmentManager) {
         StoryViewController storyViewController = (StoryViewController) fragmentManager.findFragmentByTag(TAG);
@@ -76,8 +76,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             storiesList = StoryDao.getStoriesSortedByRank();
         }
         storiesList.addChangeListener(this);
-        remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
         getLatestStories();
+        i = 0;
     }
 
     @Override
@@ -93,51 +93,23 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         return storiesList;
     }
 
-    private void refreshList(List<Long> list) {
-        ArrayList<Long> selectForUpdate = new ArrayList<>();
-        final ArrayList<Integer> selectForDelete = new ArrayList<>();
-        final ArrayList<Integer> ranks = new ArrayList<>();
-        int i = 0;
-        for (; i < Math.min(Math.min(AbstractBatchRequest.getSuggestedReqCount(), list.size()), storiesList.size()); i++) {
-            if (list.get(i).intValue() == storiesList.get(i).getId()) {
-                selectForUpdate.add(Long.valueOf(storiesList.get(i).getId()));
-            } else {
-                selectForDelete.add(storiesList.get(i).getId());
-                selectForUpdate.add(list.get(i));
-            }
-            ranks.add(i);
-        }
-        for (; i < storiesList.size(); i++) {
-            selectForDelete.add(storiesList.get(i).getId());
-        }
-
-        new StoryBatchRequest(selectForUpdate, ranks,
-                new JobResponseListener(true, selectForDelete, loadListener)).start();
-    }
-
     public void getLatestStories() {
         deferredExistingStory.done(new DoneCallback<RealmResults<Story>>() {
             @Override
             public void onDone(RealmResults<Story> storyOnDevice) {
-                loadOrRefresh(storyOnDevice.size() >= 5);
+                refresh();
             }
         });
     }
 
-    private void loadOrRefresh(final boolean shouldReresh) {
+    private void refresh() {
         apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
-            public void onSuccess(final List<Long> liveStoryItemIds) {
-                StoryToFetchDao.add(liveStoryItemIds, new Realm.Transaction.OnSuccess() {
-                    @Override
-                    public void onSuccess() {
-                        if (shouldReresh) {
-                            refreshList(liveStoryItemIds);
-                        } else {
-                            loadMore();
-                        }
-                    }
-                });
+            public void onSuccess(List<Long> liveStoryItemIds) {
+                    StoryViewController.this.liveStoryItemIds = liveStoryItemIds;
+                    i = 0;
+                    refreshList(liveStoryItemIds);
+
             }
 
             @Override
@@ -149,10 +121,47 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         });
     }
 
+    /***
+     * load new latest list of items
+     * keep items we already have on device from the new list
+     * and delete items we have but not in the list
+     * @param liveStoryItemIds
+     */
+    private void refreshList(List<Long> liveStoryItemIds) {
+        ArrayList<Long> itemToBeFetchedList = new ArrayList<>();
+        ArrayList<Integer> itemsToDelList = new ArrayList<>();
+        ArrayList<Integer> ranks = new ArrayList<>();
+        HashMap<Integer,Boolean> hashMap = new HashMap<>();
+
+        for (; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(),liveStoryItemIds.size()); i++) {
+                itemToBeFetchedList.add(liveStoryItemIds.get(i));
+                ranks.add(i);
+                hashMap.put(liveStoryItemIds.get(i).intValue(),true);
+        }
+        for (Story story : storiesList) {
+            int id = story.getId();
+            if(hashMap.get(id) == null) {
+                itemsToDelList.add(id);
+            }
+        }
+
+        new StoryBatchRequest(itemToBeFetchedList, ranks,
+                new JobResponseListener(true, itemsToDelList, loadListener)).start();
+    }
+
     public void loadMore() {
         StoryDao.addDummy();
-        remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
-        remainingStoryToFetchIds.addChangeListener(new LoadFromRemainingStory());
+        List<Long> req = new ArrayList<>();
+        List<Integer> ranks = new ArrayList<>();
+        for (; i < liveStoryItemIds.size(); i++) {
+            if(req.size() < AbstractBatchRequest.getSuggestedReqCount()) {
+                req.add(liveStoryItemIds.get(i));
+                ranks.add(i);
+            }else{
+                break;
+            }
+        }
+        new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
     }
 
     public interface OnDataLoadListener {
@@ -161,27 +170,12 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         void onLoadError(Exception ex);
     }
 
-    private class LoadFromRemainingStory implements OrderedRealmCollectionChangeListener<RealmResults<StoryToFetch>> {
-        @Override
-        public void onChange(RealmResults<StoryToFetch> remianingStory, OrderedCollectionChangeSet changeSet) {
-            remianingStory.removeChangeListener(this);
-            List<Long> req = new ArrayList<>();
-            List<Integer> ranks = new ArrayList<>();
-            for (int i = 0; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), remianingStory.size()); i++) {
-                req.add(remianingStory.get(i).getId());
-                ranks.add(remianingStory.get(i).getRank());
-            }
-            new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
-        }
-    }
-
     @Override
     public void onDetach() {
         super.onDetach();
         if (deferredExistingStory.isPending()) {
             deferredExistingStory.reject(null);
         }
-        remainingStoryToFetchIds.removeAllChangeListeners();
         storiesList.removeChangeListener(this);
         loadListener = null;
     }
@@ -204,7 +198,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 StoryDao.addAndDelete(response, selectForDelete, new Realm.Transaction.OnSuccess() {
                     @Override
                     public void onSuccess() {
-                        StoryToFetchDao.deleteFromRemainderList(response);
                         OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();
                         if (loadListener != null) {
                             loadListener.onDataLoaded();
@@ -215,7 +208,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 StoryDao.addnewData(response, new Realm.Transaction.OnSuccess() {
                     @Override
                     public void onSuccess() {
-                        StoryToFetchDao.deleteFromRemainderList(response);
                         OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();
                         if (loadListener != null) {
                             loadListener.onDataLoaded();

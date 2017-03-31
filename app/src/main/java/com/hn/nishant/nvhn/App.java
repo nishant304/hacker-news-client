@@ -28,22 +28,10 @@ public class App extends Application {
 
     private static ApiService apiService;
 
-    public static RefWatcher getRefWatcher(Context context) {
-        App application = (App) context.getApplicationContext();
-        return application.refWatcher;
-    }
-
-    private RefWatcher refWatcher;
-
     @Override
     public void onCreate() {
         super.onCreate();
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            // This process is dedicated to LeakCanary for heap analysis.
-            // You should not init your app in this process.
-            return;
-        }
-        refWatcher = LeakCanary.install(this);
+
         FirebaseApp.initializeApp(this);
         Realm.init(this);
         retrofit = new Retrofit.Builder()

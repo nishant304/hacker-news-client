@@ -2,14 +2,12 @@ package com.hn.nishant.nvhn.dao;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.model.Story;
-import com.hn.nishant.nvhn.util.ObjectPool;
+import com.hn.nishant.nvhn.util.StoryObjPool;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmObject;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 /**
@@ -73,7 +71,7 @@ public class StoryDao {
             @Override
             public void execute(Realm realm) {
                 deleteDummy();
-                realm.copyToRealmOrUpdate(response);
+                realm.copyToRealm(response);
             }
         },onSuccess);
     }
@@ -96,7 +94,7 @@ public class StoryDao {
             try {
                 Story story = realm.where(Story.class).equalTo("id", list.get(i)).findFirst();
                 story.deleteFromRealm();
-                ObjectPool.getObjectPool().putStory(story);
+                StoryObjPool.getInstance().putStory(story);
             } catch (Exception e) {
 
             }

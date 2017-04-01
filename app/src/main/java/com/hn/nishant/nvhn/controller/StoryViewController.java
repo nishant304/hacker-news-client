@@ -72,24 +72,25 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        if (storiesList == null) {
-            storiesList = StoryDao.getStoriesSortedByRank();
-        }
-        storiesList.addChangeListener(this);
         getLatestStories();
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        storiesList = StoryDao.getStoriesSortedByRank();
+        storiesList.addChangeListener(this);
+    }
+
+    @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
+        storiesList.removeChangeListener(this);
         if(deferredExistingStory.isPending()) {
             deferredExistingStory.resolve(collection);
         }
     }
 
     public RealmResults<Story> getStories() {
-        if (storiesList == null) {
-            storiesList = StoryDao.getStoriesSortedByRank();
-        }
         return storiesList;
     }
 
@@ -106,9 +107,9 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
             public void onSuccess(List<Long> liveStoryItemIds) {
-                    StoryViewController.this.liveStoryItemIds = liveStoryItemIds;
-                    i = 0;
-                    refreshList(liveStoryItemIds);
+                StoryViewController.this.liveStoryItemIds = liveStoryItemIds;
+                i = 0;
+                refreshList(liveStoryItemIds);
             }
 
             @Override
@@ -132,8 +133,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         ArrayList<Integer> ranks = new ArrayList<>();
 
         for (; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(),liveStoryItemIds.size()); i++) {
-                itemToBeFetchedList.add(liveStoryItemIds.get(i));
-                ranks.add(i);
+            itemToBeFetchedList.add(liveStoryItemIds.get(i));
+            ranks.add(i);
         }
 
         new StoryBatchRequest(itemToBeFetchedList, ranks,

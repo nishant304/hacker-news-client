@@ -14,6 +14,6 @@ public class LinearLayoutManager extends android.support.v7.widget.LinearLayoutM
 
     @Override
     public boolean supportsPredictiveItemAnimations() {
-        return false;
+        return true;
     }
 }

@@ -42,6 +42,11 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         swipeRefreshLayout.setOnRefreshListener(this);
         swipeRefreshLayout.setRefreshing(isLoading);
         storyViewController = StoryViewController.getInstance(getFragmentManager());
+    }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
         setUpRecyclerView();
     }
 
@@ -69,6 +74,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     @Override
     public void onRefresh() {
         if(isLoading){
+            swipeRefreshLayout.setRefreshing(false);
             return;
         }
         isLoading = true;

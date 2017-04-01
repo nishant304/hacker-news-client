@@ -28,8 +28,6 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private StoryAdapter storyAdapter;
 
-    private boolean isLoading = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +39,12 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         swipeRefreshLayout.setOnRefreshListener(this);
         storyViewController = StoryViewController.getInstance(getFragmentManager());
         setUpRecyclerView();
-        App.getRefWatcher(this).watch(this);
+    }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+        swipeRefreshLayout.setRefreshing(storyViewController.isLoading());
     }
 
     private void setUpRecyclerView(){
@@ -66,19 +69,20 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     @Override
     public void onRefresh() {
-        isLoading = true;
+        if(storyViewController.isLoading()){
+            swipeRefreshLayout.setRefreshing(false);
+            return;
+        }
         storyViewController.getLatestStories();
     }
 
     @Override
     public void onDataLoaded() {
-        isLoading = false;
         swipeRefreshLayout.setRefreshing(false);
     }
 
     @Override
     public void onLoadError(Exception ex) {
-        isLoading = false;
         swipeRefreshLayout.setRefreshing(false);
         makeToast(ex.getMessage());
     }
@@ -90,8 +94,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int visibleItems = layoutManager.getChildCount();
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
-            if (dy > 0 && !isLoading && visibleItems + firstVisibleItem >= totalItems) {
-                isLoading = true;
+            if (dy > 0 && visibleItems + firstVisibleItem +5>= totalItems) {
                 storyViewController.loadMore();
             }
         }

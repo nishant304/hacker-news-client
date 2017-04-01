@@ -27,6 +27,7 @@ public class StoryBatchRequest extends AbstractBatchRequest<Story> {
     @Override
     protected void onSingleItemFetched(Story story) {
         story.setRank(idToRankMapping.get(story.getId()));
+        System.out.println(story.getId() +"fetched");
     }
 
     @Override

@@ -50,7 +50,7 @@ public class Story extends RealmObject {
     @Expose
     private String type;
 
-    private Integer descendants;
+    private Integer descendants = 0;
 
     @Exclude
     private Integer rank;

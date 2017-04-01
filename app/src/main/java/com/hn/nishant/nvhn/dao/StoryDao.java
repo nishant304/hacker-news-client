@@ -2,14 +2,15 @@ package com.hn.nishant.nvhn.dao;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.model.Story;
-import com.hn.nishant.nvhn.util.ObjectPool;
+import com.hn.nishant.nvhn.util.StoryObjPool;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmObject;
-import io.realm.RealmQuery;
+import io.realm.RealmList;
 import io.realm.RealmResults;
 
 /**
@@ -20,7 +21,7 @@ public class StoryDao {
 
     public static final int DEFALUT_ITEM_ID = 1000;
 
-    public static void addDummy(){
+    public static void addDummy() {
         App.getRealm().executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -36,9 +37,9 @@ public class StoryDao {
         });
     }
 
-    public static void deleteDummy(){
-        Story story = App.getRealm().where(Story.class).equalTo("id",DEFALUT_ITEM_ID).findFirst();
-        if(story != null){
+    public static void deleteDummy() {
+        Story story = App.getRealm().where(Story.class).equalTo("id", DEFALUT_ITEM_ID).findFirst();
+        if (story != null) {
             story.deleteFromRealm();
         }
     }
@@ -54,7 +55,7 @@ public class StoryDao {
                 .findAllAsync();
     }
 
-    public static Story getStoryForId(int id,Realm realm) {
+    public static Story getStoryForId(int id, Realm realm) {
         return realm.where(Story.class).equalTo("id", id).findFirst();
     }
 
@@ -62,12 +63,18 @@ public class StoryDao {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                delData(delete, realm);
+                delData(response, realm);
                 realm.copyToRealmOrUpdate(response);
             }
-        },onSuccess);
+        }, onSuccess);
     }
 
+    /***
+     * Sometimes realm is unable to delete references means we have to use update function
+     * to avoid primary key constraint failed excpetion
+     * @param response
+     * @param onSuccess
+     */
     public static void addnewData(final List<Story> response, Realm.Transaction.OnSuccess onSuccess) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
@@ -75,28 +82,23 @@ public class StoryDao {
                 deleteDummy();
                 realm.copyToRealmOrUpdate(response);
             }
-        },onSuccess);
+        }, onSuccess);
     }
 
-    public static void delete(final List<Story> response) {
-        final ArrayList<Integer> list = new ArrayList<>();
-        for (int i = 0; i < response.size(); i++) {
-            list.add(response.get(i).getId());
-        }
-        App.getRealm().executeTransactionAsync(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                delData(list, realm);
-            }
-        });
-    }
-
-    private static void delData(List<Integer> list, Realm realm) {
-        for (int i = 0; i < list.size(); i++) {
+    private static void delData(List<Story> list, Realm realm) {
+        RealmResults<Story> all = realm.where(Story.class).equalTo("type", "story").findAll();
+        for (int i = all.size() -1; i >=0 ; i--) {
             try {
-                Story story = realm.where(Story.class).equalTo("id", list.get(i)).findFirst();
-                story.deleteFromRealm();
-                ObjectPool.getObjectPool().putStory(story);
+                Story story = all.get(i);
+                boolean exist = false;
+                for (int j = 0; j < list.size(); j++) {
+                    if (list.get(j).getId().equals(story.getId())) {
+                        exist = true;
+                    }
+                }
+                if(!exist) {
+                   all.deleteFromRealm(i);
+                }
             } catch (Exception e) {
 
             }

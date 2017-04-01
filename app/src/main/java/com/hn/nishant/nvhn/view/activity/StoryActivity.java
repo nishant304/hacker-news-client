@@ -28,26 +28,23 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private StoryAdapter storyAdapter;
 
-    private boolean isLoading = true;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (savedInstanceState != null) {
             pos = savedInstanceState.getInt("pos");
-            isLoading = savedInstanceState.getBoolean("loading");
         }
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
         swipeRefreshLayout.setOnRefreshListener(this);
-        swipeRefreshLayout.setRefreshing(isLoading);
         storyViewController = StoryViewController.getInstance(getFragmentManager());
+        setUpRecyclerView();
     }
 
     @Override
     protected void onResumeFragments() {
         super.onResumeFragments();
-        setUpRecyclerView();
+        swipeRefreshLayout.setRefreshing(storyViewController.isLoading());
     }
 
     private void setUpRecyclerView(){
@@ -67,29 +64,25 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt("pos", layoutManager.findFirstVisibleItemPosition());
-        outState.putBoolean("loading",isLoading);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onRefresh() {
-        if(isLoading){
+        if(storyViewController.isLoading()){
             swipeRefreshLayout.setRefreshing(false);
             return;
         }
-        isLoading = true;
         storyViewController.getLatestStories();
     }
 
     @Override
     public void onDataLoaded() {
-        isLoading = false;
         swipeRefreshLayout.setRefreshing(false);
     }
 
     @Override
     public void onLoadError(Exception ex) {
-        isLoading = false;
         swipeRefreshLayout.setRefreshing(false);
         makeToast(ex.getMessage());
     }
@@ -101,8 +94,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int visibleItems = layoutManager.getChildCount();
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
-            if (dy > 0 && !isLoading && visibleItems + firstVisibleItem +5>= totalItems) {
-                isLoading = true;
+            if (dy > 0 && visibleItems + firstVisibleItem +5>= totalItems) {
                 storyViewController.loadMore();
             }
         }

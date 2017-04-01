@@ -48,6 +48,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     private int i = 0;
 
+    private boolean isLoading = false;
+
     public static StoryViewController getInstance(@NonNull FragmentManager fragmentManager) {
         StoryViewController storyViewController = (StoryViewController) fragmentManager.findFragmentByTag(TAG);
         if (storyViewController == null) {
@@ -76,25 +78,28 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        storiesList = StoryDao.getStoriesSortedByRank();
-        storiesList.addChangeListener(this);
-    }
-
-    @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
         storiesList.removeChangeListener(this);
-        if(deferredExistingStory.isPending()) {
+        if (deferredExistingStory.isPending()) {
             deferredExistingStory.resolve(collection);
         }
     }
 
     public RealmResults<Story> getStories() {
+        storiesList = StoryDao.getStoriesSortedByRank();
+        storiesList.addChangeListener(this);
         return storiesList;
     }
 
+    public boolean isLoading() {
+        return isLoading;
+    }
+
     public void getLatestStories() {
+        if(isLoading){
+            return;
+        }
+        isLoading = true;
         deferredExistingStory.done(new DoneCallback<RealmResults<Story>>() {
             @Override
             public void onDone(RealmResults<Story> storyOnDevice) {
@@ -117,6 +122,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 if (loadListener != null) {
                     loadListener.onLoadError(new Exception("Something went wrong"));
                 }
+                isLoading = false;
             }
         });
     }
@@ -132,7 +138,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         ArrayList<Integer> itemsToDelList = new ArrayList<>();
         ArrayList<Integer> ranks = new ArrayList<>();
 
-        for (; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(),liveStoryItemIds.size()); i++) {
+        for (; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), liveStoryItemIds.size()); i++) {
             itemToBeFetchedList.add(liveStoryItemIds.get(i));
             ranks.add(i);
         }
@@ -142,14 +148,18 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     public void loadMore() {
+        if(isLoading){
+            return;
+        }
+        isLoading = true;
         StoryDao.addDummy();
         List<Long> req = new ArrayList<>();
         List<Integer> ranks = new ArrayList<>();
         for (; i < liveStoryItemIds.size(); i++) {
-            if(req.size() < AbstractBatchRequest.getSuggestedReqCount()) {
+            if (req.size() < AbstractBatchRequest.getSuggestedReqCount()) {
                 req.add(liveStoryItemIds.get(i));
                 ranks.add(i);
-            }else{
+            } else {
                 break;
             }
         }
@@ -172,7 +182,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         loadListener = null;
     }
 
-    private static class JobResponseListener implements AbstractBatchRequest.JobCompleteListener<Story> {
+    private class JobResponseListener implements AbstractBatchRequest.JobCompleteListener<Story> {
 
         private boolean isRefresh;
         private List<Integer> selectForDelete;
@@ -194,6 +204,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                         if (loadListener != null) {
                             loadListener.onDataLoaded();
                         }
+                        isLoading = false;
                     }
                 });
             } else {
@@ -204,6 +215,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                         if (loadListener != null) {
                             loadListener.onDataLoaded();
                         }
+                        isLoading = false;
                     }
                 });
             }

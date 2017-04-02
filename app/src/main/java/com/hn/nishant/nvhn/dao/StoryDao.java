@@ -2,6 +2,7 @@ package com.hn.nishant.nvhn.dao;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.model.Story;
+import com.hn.nishant.nvhn.util.RealmInteger;
 import com.hn.nishant.nvhn.util.StoryObjPool;
 
 import java.util.ArrayList;
@@ -21,20 +22,14 @@ public class StoryDao {
 
     public static final int DEFALUT_ITEM_ID = 1000;
 
-    public static void addDummy() {
-        App.getRealm().executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                Story story = new Story();
-                story.setRank(DEFALUT_ITEM_ID);
-                story.setId(DEFALUT_ITEM_ID);
-                story.setBy("me");
-                story.setType("story");
-                story.setTitle("please");
-                realm.copyToRealmOrUpdate(story);
-                System.out.println("");
-            }
-        });
+    public static void addDummy(Realm realm) {
+        Story story = new Story();
+        story.setRank(DEFALUT_ITEM_ID);
+        story.setId(DEFALUT_ITEM_ID);
+        story.setBy("me");
+        story.setType("story");
+        story.setTitle("please");
+        realm.copyToRealmOrUpdate(story);
     }
 
     public static void deleteDummy() {
@@ -65,6 +60,7 @@ public class StoryDao {
             public void execute(Realm realm) {
                 delData(response, realm);
                 realm.copyToRealmOrUpdate(response);
+                addDummy(realm);
             }
         }, onSuccess);
     }
@@ -75,19 +71,23 @@ public class StoryDao {
      * @param response
      * @param onSuccess
      */
-    public static void addnewData(final List<Story> response, Realm.Transaction.OnSuccess onSuccess) {
+    public static void addnewData(final List<Story> response, final boolean shouldAdd, Realm.Transaction.OnSuccess onSuccess) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 deleteDummy();
                 realm.copyToRealmOrUpdate(response);
+                if (shouldAdd) {
+                    addDummy(realm);
+                }
+
             }
         }, onSuccess);
     }
 
     private static void delData(List<Story> list, Realm realm) {
         RealmResults<Story> all = realm.where(Story.class).equalTo("type", "story").findAll();
-        for (int i = all.size() -1; i >=0 ; i--) {
+        for (int i = all.size() - 1; i >= 0; i--) {
             try {
                 Story story = all.get(i);
                 boolean exist = false;
@@ -96,8 +96,8 @@ public class StoryDao {
                         exist = true;
                     }
                 }
-                if(!exist) {
-                   all.deleteFromRealm(i);
+                if (!exist) {
+                    all.deleteFromRealm(i);
                 }
             } catch (Exception e) {
 

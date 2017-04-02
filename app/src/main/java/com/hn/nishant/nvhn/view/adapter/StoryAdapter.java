@@ -2,6 +2,7 @@ package com.hn.nishant.nvhn.view.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -125,7 +126,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     }
 
     @Override
-    public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
+    public void onChange(final RealmResults<Story> collection, final OrderedCollectionChangeSet changeSet) {
         if (changeSet != null) {
 
             for (int i = changeSet.getDeletionRanges().length - 1; i >= 0; i--) {
@@ -139,14 +140,13 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             }
 
             for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
-                for (int j = changeSet.getChangeRanges()[i].startIndex; j <changeSet.getChangeRanges()[i].startIndex+
+                for (int j = changeSet.getChangeRanges()[i].startIndex; j < changeSet.getChangeRanges()[i].startIndex +
                         changeSet.getChangeRanges()[i].length; j++) {
-                    System.out.println("onchange j "+j +" and  prev item size" + posTracker.size());
-                    if( posTracker.get(j).intValue() == collection.get(j).getId()) {
+                    if (posTracker.get(j).intValue() == collection.get(j).getId()) {
                         if (isChanged(collection.get(j).getId(), collection.get(j).getDescendants())) {
                             notifyItemChanged(j, collection.get(j).getDescendants());
                         }
-                    }else{
+                    } else {
                         notifyItemChanged(j);
                     }
                 }
@@ -167,7 +167,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         posTracker.clear();
         for (int i = 0; i < itemList.size(); i++) {
             changeTracker.put(itemList.get(i).getId(), itemList.get(i).getDescendants());
-            posTracker.put(i,itemList.get(i).getId());
+            posTracker.put(i, itemList.get(i).getId());
         }
     }
 

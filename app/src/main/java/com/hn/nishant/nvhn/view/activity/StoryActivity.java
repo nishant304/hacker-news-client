@@ -47,14 +47,14 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         swipeRefreshLayout.setRefreshing(storyViewController.isLoading());
     }
 
-    private void setUpRecyclerView(){
+    private void setUpRecyclerView() {
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         layoutManager = new LinearLayoutManager(this);
         storyAdapter = new StoryAdapter(this, storyViewController.getStories());
 
         recyclerView.addOnScrollListener(new ScrollListener());
         recyclerView.setHasFixedSize(true);
-        recyclerView.getRecycledViewPool().setMaxRecycledViews(1,20);
+        recyclerView.getRecycledViewPool().setMaxRecycledViews(1, 20);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(storyAdapter);
         recyclerView.setItemAnimator(new ChangeItemAnimator());
@@ -69,7 +69,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     @Override
     public void onRefresh() {
-        if(storyViewController.isLoading()){
+        if (storyViewController.isLoading()) {
             swipeRefreshLayout.setRefreshing(false);
             return;
         }
@@ -94,10 +94,11 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int visibleItems = layoutManager.getChildCount();
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
-            if (dy > 0 && visibleItems + firstVisibleItem +5>= totalItems) {
+            if (dy > 0 && visibleItems + firstVisibleItem + 5 >= totalItems) {
                 storyViewController.loadMore();
             }
         }
+
     }
 
     @Override

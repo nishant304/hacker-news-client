@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -96,7 +97,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     public void getLatestStories() {
-        if(isLoading){
+        if (isLoading) {
             return;
         }
         isLoading = true;
@@ -148,13 +149,13 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     public void loadMore() {
-        if(isLoading){
+        if (isLoading) {
             return;
         }
         isLoading = true;
-        StoryDao.addDummy();
-        List<Long> req = new ArrayList<>();
-        List<Integer> ranks = new ArrayList<>();
+
+        final List<Long> req = new ArrayList<>();
+        final List<Integer> ranks = new ArrayList<>();
         for (; i < liveStoryItemIds.size(); i++) {
             if (req.size() < AbstractBatchRequest.getSuggestedReqCount()) {
                 req.add(liveStoryItemIds.get(i));
@@ -163,7 +164,12 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 break;
             }
         }
-        new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
+            }
+        });
     }
 
     public interface OnDataLoadListener {
@@ -208,7 +214,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                     }
                 });
             } else {
-                StoryDao.addnewData(response, new Realm.Transaction.OnSuccess() {
+                StoryDao.addnewData(response, i != liveStoryItemIds.size(), new Realm.Transaction.OnSuccess() {
                     @Override
                     public void onSuccess() {
                         OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();

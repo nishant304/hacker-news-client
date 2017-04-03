@@ -4,7 +4,10 @@ import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.R;
@@ -30,10 +33,13 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private boolean isLoading = false;
 
+    private Toolbar toolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         if (savedInstanceState != null) {
             pos = savedInstanceState.getInt("pos");
         }
@@ -94,7 +100,23 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
                 isLoading = true;
                 storyViewController.loadMore();
             }
+
+            if(dy > 0){
+                hideToolBar();
+            }else{
+                showToolBar();
+            }
+
         }
+    }
+
+    private void showToolBar(){
+        toolbar.animate().translationY(0).setInterpolator(new DecelerateInterpolator()).start();
+    }
+
+    private void hideToolBar(){
+        toolbar.animate().translationY(-toolbar.getBottom()).
+                setInterpolator(new AccelerateInterpolator()).start();
     }
 
     @Override

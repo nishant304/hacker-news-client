@@ -7,6 +7,10 @@
     android:id="@+id/swipe"
     tools:context="com.hn.nishant.nvhn.view.activity.StoryActivity">
 
+    <include layout="@layout/app_bar"
+        android:id="@+id/toolbar"
+        ></include>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"

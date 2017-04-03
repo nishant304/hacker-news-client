@@ -25,7 +25,7 @@ public abstract class AbstractBatchRequest<T> {
 
     private int reqCount;
 
-    private static int suggestedReqCount = 10;
+    private static int suggestedReqCount = 12;
 
     private HashMap<Integer,Boolean> reqTracker = new HashMap<>();
 
@@ -51,7 +51,7 @@ public abstract class AbstractBatchRequest<T> {
     }
 
     public void start() {
-        for (   ; i < Math.min(10,reqCount); i++) {
+        for (   ; i < Math.min(reqCount,7); i++) {
             placeSingleReq(apiService, resp, i);
         }
     }
@@ -101,7 +101,7 @@ public abstract class AbstractBatchRequest<T> {
         } else {
             suggestedReqCount--;
         }
-        suggestedReqCount = Math.min(15, suggestedReqCount);
+        suggestedReqCount = Math.min(20, suggestedReqCount);
         suggestedReqCount = Math.max(5, suggestedReqCount);
     }
 

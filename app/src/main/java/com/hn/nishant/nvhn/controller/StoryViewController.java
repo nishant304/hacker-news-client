@@ -4,25 +4,24 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
-import com.hn.nishant.nvhn.dao.StoryToFetchDao;
 import com.hn.nishant.nvhn.dao.StoryDao;
-import com.hn.nishant.nvhn.model.StoryToFetch;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.AbstractBatchRequest;
 import com.hn.nishant.nvhn.network.ResponseListener;
 import com.hn.nishant.nvhn.network.StoryBatchRequest;
-import com.squareup.leakcanary.RefWatcher;
 
 import org.jdeferred.DoneCallback;
 import org.jdeferred.impl.DeferredObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.realm.OrderedCollectionChangeSet;
@@ -42,11 +41,15 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     private RealmResults<Story> storiesList;
 
-    private RealmResults<StoryToFetch> remainingStoryToFetchIds;
-
     private DeferredObject<RealmResults<Story>, Void, Void> deferredExistingStory = new DeferredObject();
 
     private OnDataLoadListener loadListener;
+
+    private List<Long> liveStoryItemIds = new ArrayList<>();
+
+    private int i = 0;
+
+    private boolean isLoading = false;
 
     public static StoryViewController getInstance(@NonNull FragmentManager fragmentManager) {
         StoryViewController storyViewController = (StoryViewController) fragmentManager.findFragmentByTag(TAG);
@@ -72,72 +75,47 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        if (storiesList == null) {
-            storiesList = StoryDao.getStoriesSortedByRank();
-        }
-        storiesList.addChangeListener(this);
-        remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
         getLatestStories();
     }
 
     @Override
     public void onChange(RealmResults<Story> collection, OrderedCollectionChangeSet changeSet) {
         storiesList.removeChangeListener(this);
-        deferredExistingStory.resolve(collection);
+        if (deferredExistingStory.isPending()) {
+            deferredExistingStory.resolve(collection);
+        }
     }
 
     public RealmResults<Story> getStories() {
-        if (storiesList == null) {
-            storiesList = StoryDao.getStoriesSortedByRank();
-        }
+        storiesList = StoryDao.getStoriesSortedByRank();
+        storiesList.addChangeListener(this);
         return storiesList;
     }
 
-    private void refreshList(List<Long> list) {
-        ArrayList<Long> selectForUpdate = new ArrayList<>();
-        final ArrayList<Integer> selectForDelete = new ArrayList<>();
-        final ArrayList<Integer> ranks = new ArrayList<>();
-        int i = 0;
-        for (; i < Math.min(Math.min(AbstractBatchRequest.getSuggestedReqCount(), list.size()), storiesList.size()); i++) {
-            if (list.get(i).intValue() == storiesList.get(i).getId()) {
-                selectForUpdate.add(Long.valueOf(storiesList.get(i).getId()));
-            } else {
-                selectForDelete.add(storiesList.get(i).getId());
-                selectForUpdate.add(list.get(i));
-            }
-            ranks.add(i);
-        }
-        for (; i < storiesList.size(); i++) {
-            selectForDelete.add(storiesList.get(i).getId());
-        }
-
-        new StoryBatchRequest(selectForUpdate, ranks,
-                new JobResponseListener(true, selectForDelete, loadListener)).start();
+    public boolean isLoading() {
+        return isLoading;
     }
 
     public void getLatestStories() {
+        if (isLoading) {
+            return;
+        }
+        isLoading = true;
         deferredExistingStory.done(new DoneCallback<RealmResults<Story>>() {
             @Override
             public void onDone(RealmResults<Story> storyOnDevice) {
-                loadOrRefresh(storyOnDevice.size() >= 5);
+                refresh();
             }
         });
     }
 
-    private void loadOrRefresh(final boolean shouldReresh) {
+    private void refresh() {
         apiService.getStoryIds(new ResponseListener<List<Long>>() {
             @Override
-            public void onSuccess(final List<Long> liveStoryItemIds) {
-                StoryToFetchDao.add(liveStoryItemIds, new Realm.Transaction.OnSuccess() {
-                    @Override
-                    public void onSuccess() {
-                        if (shouldReresh) {
-                            refreshList(liveStoryItemIds);
-                        } else {
-                            loadMore();
-                        }
-                    }
-                });
+            public void onSuccess(List<Long> liveStoryItemIds) {
+                StoryViewController.this.liveStoryItemIds = liveStoryItemIds;
+                i = 0;
+                refreshList(liveStoryItemIds);
             }
 
             @Override
@@ -145,14 +123,53 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 if (loadListener != null) {
                     loadListener.onLoadError(new Exception("Something went wrong"));
                 }
+                isLoading = false;
             }
         });
     }
 
+    /***
+     * load new latest list of items
+     * keep items we already have on device from the new list
+     * and delete items we have but not in the list
+     * @param liveStoryItemIds
+     */
+    private void refreshList(List<Long> liveStoryItemIds) {
+        ArrayList<Long> itemToBeFetchedList = new ArrayList<>();
+        ArrayList<Integer> itemsToDelList = new ArrayList<>();
+        ArrayList<Integer> ranks = new ArrayList<>();
+
+        for (; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), liveStoryItemIds.size()); i++) {
+            itemToBeFetchedList.add(liveStoryItemIds.get(i));
+            ranks.add(i);
+        }
+
+        new StoryBatchRequest(itemToBeFetchedList, ranks,
+                new JobResponseListener(true, itemsToDelList, loadListener)).start();
+    }
+
     public void loadMore() {
-        StoryDao.addDummy();
-        remainingStoryToFetchIds = StoryToFetchDao.getStoriesToFetch();
-        remainingStoryToFetchIds.addChangeListener(new LoadFromRemainingStory());
+        if (isLoading) {
+            return;
+        }
+        isLoading = true;
+
+        final List<Long> req = new ArrayList<>();
+        final List<Integer> ranks = new ArrayList<>();
+        for (; i < liveStoryItemIds.size(); i++) {
+            if (req.size() < AbstractBatchRequest.getSuggestedReqCount()) {
+                req.add(liveStoryItemIds.get(i));
+                ranks.add(i);
+            } else {
+                break;
+            }
+        }
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
+            }
+        });
     }
 
     public interface OnDataLoadListener {
@@ -161,32 +178,17 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         void onLoadError(Exception ex);
     }
 
-    private class LoadFromRemainingStory implements OrderedRealmCollectionChangeListener<RealmResults<StoryToFetch>> {
-        @Override
-        public void onChange(RealmResults<StoryToFetch> remianingStory, OrderedCollectionChangeSet changeSet) {
-            remianingStory.removeChangeListener(this);
-            List<Long> req = new ArrayList<>();
-            List<Integer> ranks = new ArrayList<>();
-            for (int i = 0; i < Math.min(AbstractBatchRequest.getSuggestedReqCount(), remianingStory.size()); i++) {
-                req.add(remianingStory.get(i).getId());
-                ranks.add(remianingStory.get(i).getRank());
-            }
-            new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
-        }
-    }
-
     @Override
     public void onDetach() {
         super.onDetach();
         if (deferredExistingStory.isPending()) {
             deferredExistingStory.reject(null);
         }
-        remainingStoryToFetchIds.removeAllChangeListeners();
         storiesList.removeChangeListener(this);
         loadListener = null;
     }
 
-    private static class JobResponseListener implements AbstractBatchRequest.JobCompleteListener<Story> {
+    private class JobResponseListener implements AbstractBatchRequest.JobCompleteListener<Story> {
 
         private boolean isRefresh;
         private List<Integer> selectForDelete;
@@ -204,22 +206,22 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 StoryDao.addAndDelete(response, selectForDelete, new Realm.Transaction.OnSuccess() {
                     @Override
                     public void onSuccess() {
-                        StoryToFetchDao.deleteFromRemainderList(response);
                         OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();
                         if (loadListener != null) {
                             loadListener.onDataLoaded();
                         }
+                        isLoading = false;
                     }
                 });
             } else {
-                StoryDao.addnewData(response, new Realm.Transaction.OnSuccess() {
+                StoryDao.addnewData(response, i != liveStoryItemIds.size(), new Realm.Transaction.OnSuccess() {
                     @Override
                     public void onSuccess() {
-                        StoryToFetchDao.deleteFromRemainderList(response);
                         OnDataLoadListener loadListener = onDataLoadListenerWeakReference.get();
                         if (loadListener != null) {
                             loadListener.onDataLoaded();
                         }
+                        isLoading = false;
                     }
                 });
             }

@@ -5,10 +5,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
 import com.hn.nishant.nvhn.model.Story;
-import com.hn.nishant.nvhn.util.ObjectPool;
 import com.hn.nishant.nvhn.util.RealmInteger;
+import com.hn.nishant.nvhn.util.StoryObjPool;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,12 +57,12 @@ public class FireBaseImpl implements ApiService {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        Story story = dataSnapshot.getValue(Story.class);
                         HashMap<String, Object> hm = (HashMap<String, Object>) dataSnapshot.getValue();
-                        setCommentsId(story,hm);
-                        if(story != null) {
+                        Story story = getFromMap(hm);
+                        setCommentsId(story, hm);
+                        if (story != null) {
                             responseListener.onSuccess(story);
-                        }else{
+                        } else {
                             responseListener.onError(new Exception("something went wrong"));
                         }
                     }
@@ -80,8 +81,8 @@ public class FireBaseImpl implements ApiService {
      * @param story
      * @param hm
      */
-    private void setCommentsId(Story story, HashMap<String,Object> hm){
-        if(hm == null){
+    private void setCommentsId(Story story, HashMap<String, Object> hm) {
+        if (hm == null) {
             return;
         }
         ArrayList<Long> kids = (ArrayList<Long>) hm.get("kids");
@@ -92,6 +93,26 @@ public class FireBaseImpl implements ApiService {
             }
             story.setKid(realmKids);
         }
+    }
+
+    /***
+     *  Avoid gson parsing on ui thread
+     * @param hm
+     * @return
+     */
+    private Story getFromMap(HashMap<String, Object> hm) {
+        Story story = new Story();
+        story.setId(((Long) hm.get("id")).intValue());
+        story.setBy((String) hm.get("by"));
+        story.setType((String) hm.get("type"));
+        story.setTitle((String) hm.get("title"));
+        story.setText((String) hm.get("text"));
+        Long desc = (Long) hm.get("descendants");
+        if (desc != null) {
+            story.setDescendants(desc.intValue());
+        }
+        story.setParent((Long) hm.get("parent"));
+        return story;
     }
 
 }

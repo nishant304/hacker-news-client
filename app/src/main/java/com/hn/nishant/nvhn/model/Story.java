@@ -14,7 +14,7 @@ public class Story extends RealmObject {
 
     @SerializedName("by")
     @Expose
-    private String by;
+    private String by = "";
 
     @PrimaryKey
     @SerializedName("id")
@@ -40,7 +40,7 @@ public class Story extends RealmObject {
 
     @SerializedName("title")
     @Expose
-    private String title;
+    private String title = "";
 
     @SerializedName("time")
     @Expose

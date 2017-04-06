@@ -1,9 +1,13 @@
 package com.hn.nishant.nvhn.dao;
 
 import com.hn.nishant.nvhn.App;
+import com.hn.nishant.nvhn.events.UpdateEvent;
 import com.hn.nishant.nvhn.model.Story;
+import com.hn.nishant.nvhn.network.ResponseListener;
 import com.hn.nishant.nvhn.util.RealmInteger;
 import com.hn.nishant.nvhn.util.StoryObjPool;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,13 +58,22 @@ public class StoryDao {
         return realm.where(Story.class).equalTo("id", id).findFirst();
     }
 
+    public static void addData(final List<Story> list){
+        App.getRealm().executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.copyToRealmOrUpdate(list);
+            }
+        });
+    }
+
     public static void addAndDelete(final List<Story> response, final List<Integer> delete, Realm.Transaction.OnSuccess onSuccess) {
         App.getRealm().executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
                 delData(response, realm);
                 realm.copyToRealmOrUpdate(response);
-                addDummy(realm);
+                //addDummy(realm);
             }
         }, onSuccess);
     }
@@ -104,5 +117,34 @@ public class StoryDao {
             }
         }
     }
+
+    public static ResponseListener<List<Long>> updateListener = new ResponseListener<List<Long>>() {
+        @Override
+        public void onSuccess(final List<Long> list) {
+            App.getRealm().executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    ArrayList<Long> idToUpdate = new ArrayList<>();
+                    ArrayList<Integer> ranks = new ArrayList<>();
+                    for(Long id :list){
+                        Story story  = realm.where(Story.class).equalTo("id",id.intValue()).findFirst();
+                        if(story != null){
+                            idToUpdate.add(id);
+                            ranks.add(story.getRank());
+                        }
+                    }
+                    UpdateEvent updateEvent = new UpdateEvent();
+                    updateEvent.setRanks(ranks);
+                    updateEvent.setUpdatedItems(idToUpdate);
+                    EventBus.getDefault().post(updateEvent);
+                }
+            });
+        }
+
+        @Override
+        public void onError(Exception ex) {
+
+        }
+    };
 
 }

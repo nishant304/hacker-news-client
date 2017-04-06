@@ -115,4 +115,24 @@ public class FireBaseImpl implements ApiService {
         return story;
     }
 
+    @Override
+    public void getUpdates(final ResponseListener<List<Long>> responseListener) {
+        firebaseDatabase.child("v0").child("updates").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                HashMap<String,Object> hashMap = (HashMap<String, Object>) dataSnapshot.getValue();
+                List<Long> updates = (List<Long>) hashMap.get("items");
+                if(updates == null){
+                    updates = new ArrayList<Long>();
+                }
+                responseListener.onSuccess(updates);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                responseListener.onError(new Exception(databaseError.getMessage()));
+            }
+        });
+    }
+
 }

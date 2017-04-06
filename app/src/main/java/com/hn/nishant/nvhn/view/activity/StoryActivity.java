@@ -1,10 +1,13 @@
 package com.hn.nishant.nvhn.view.activity;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Layout;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
@@ -31,18 +34,16 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private StoryAdapter storyAdapter;
 
-<<<<<<< HEAD
     private boolean isLoading = false;
 
     private Toolbar toolbar;
 
-=======
->>>>>>> 00195cd841335e6deb9cdb0fe75738a3a25c132f
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("ahnc");
         if (savedInstanceState != null) {
             pos = savedInstanceState.getInt("pos");
         }
@@ -108,24 +109,8 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             if (dy > 0 && visibleItems + firstVisibleItem + 5 >= totalItems) {
                 storyViewController.loadMore();
             }
-
-            if(dy > 0){
-                hideToolBar();
-            }else{
-                showToolBar();
-            }
-
         }
 
-    }
-
-    private void showToolBar(){
-        toolbar.animate().translationY(0).setInterpolator(new DecelerateInterpolator()).start();
-    }
-
-    private void hideToolBar(){
-        toolbar.animate().translationY(-toolbar.getBottom()).
-                setInterpolator(new AccelerateInterpolator()).start();
     }
 
     @Override

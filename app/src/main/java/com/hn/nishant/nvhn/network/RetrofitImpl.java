@@ -57,6 +57,11 @@ public class RetrofitImpl implements ApiService {
         });
     }
 
+    @Override
+    public void getUpdates(ResponseListener<List<Long>> responseListener) {
+
+    }
+
     public RetrofitImpl getRetrofitImpl() {
         return retrofitImpl;
     }

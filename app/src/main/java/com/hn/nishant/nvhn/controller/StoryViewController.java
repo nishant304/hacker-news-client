@@ -11,11 +11,15 @@ import android.support.annotation.Nullable;
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
 import com.hn.nishant.nvhn.dao.StoryDao;
+import com.hn.nishant.nvhn.events.UpdateEvent;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.AbstractBatchRequest;
+import com.hn.nishant.nvhn.network.IntensiveStoryRequest;
 import com.hn.nishant.nvhn.network.ResponseListener;
 import com.hn.nishant.nvhn.network.StoryBatchRequest;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 import org.jdeferred.DoneCallback;
 import org.jdeferred.impl.DeferredObject;
 
@@ -51,6 +55,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     private boolean isLoading = false;
 
+    private IntensiveStoryRequest intensiveStoryRequest = new IntensiveStoryRequest();
+
     public static StoryViewController getInstance(@NonNull FragmentManager fragmentManager) {
         StoryViewController storyViewController = (StoryViewController) fragmentManager.findFragmentByTag(TAG);
         if (storyViewController == null) {
@@ -76,6 +82,13 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         getLatestStories();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        apiService.getUpdates(StoryDao.updateListener);
+        EventBus.getDefault().register(this);
     }
 
     @Override
@@ -178,16 +191,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         void onLoadError(Exception ex);
     }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        if (deferredExistingStory.isPending()) {
-            deferredExistingStory.reject(null);
-        }
-        storiesList.removeChangeListener(this);
-        loadListener = null;
-    }
-
     private class JobResponseListener implements AbstractBatchRequest.JobCompleteListener<Story> {
 
         private boolean isRefresh;
@@ -226,6 +229,29 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
                 });
             }
         }
+    }
+
+    @Subscribe
+    public void onItemUpdate(UpdateEvent updateEvent){
+        new StoryBatchRequest(updateEvent.getUpdatedItems(), updateEvent.getRanks(),
+                new JobResponseListener(false, new ArrayList<Integer>(), loadListener)).start();
+    }
+
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        if (deferredExistingStory.isPending()) {
+            deferredExistingStory.reject(null);
+        }
+        storiesList.removeChangeListener(this);
+        loadListener = null;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
     }
 
 }

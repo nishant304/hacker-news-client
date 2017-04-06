@@ -141,7 +141,8 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
             for (int i = 0; i < changeSet.getChangeRanges().length; i++) {
                 for (int j = changeSet.getChangeRanges()[i].startIndex; j < changeSet.getChangeRanges()[i].startIndex +
-                        changeSet.getChangeRanges()[i].length; j++) {
+                        changeSet.getChangeRanges()[i].length && j <posTracker.size(); j++) {
+                    System.out.println("index " +j + " pos tracker" +posTracker.size());
                     if (posTracker.get(j).intValue() == collection.get(j).getId()) {
                         if (isChanged(collection.get(j).getId(), collection.get(j).getDescendants())) {
                             notifyItemChanged(j, collection.get(j).getDescendants());

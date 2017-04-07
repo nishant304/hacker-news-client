@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
+import com.hn.nishant.nvhn.controller.interfaces.IStoryCateogry;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.events.UpdateEvent;
 import com.hn.nishant.nvhn.model.Story;
@@ -25,7 +26,6 @@ import org.jdeferred.impl.DeferredObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import io.realm.OrderedCollectionChangeSet;
@@ -40,6 +40,8 @@ import io.realm.RealmResults;
 public class StoryViewController extends Fragment implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
 
     public static final String TAG = StoryViewController.class.getSimpleName();
+
+    private IStoryCateogry storyCateogry = new TopStoryImpl();
 
     private ApiService apiService = App.getApiService();
 
@@ -84,10 +86,15 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         getLatestStories();
     }
 
+    public void setStoryCateogry(IStoryCateogry storyCateogry) {
+        this.storyCateogry = storyCateogry;
+        getLatestStories();
+    }
+
     @Override
     public void onStart() {
         super.onStart();
-        apiService.getUpdates(StoryDao.updateListener);
+        apiService.listenForUpdates();
         EventBus.getDefault().register(this);
     }
 
@@ -100,7 +107,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     public RealmResults<Story> getStories() {
-        storiesList = StoryDao.getStoriesSortedByRank();
+        storiesList = storyCateogry.getLocalStories();
         storiesList.addChangeListener(this);
         return storiesList;
     }
@@ -123,7 +130,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     }
 
     private void refresh() {
-        apiService.getStoryIds(new ResponseListener<List<Long>>() {
+        storyCateogry.getLatestStories(new ResponseListener<List<Long>>() {
             @Override
             public void onSuccess(List<Long> liveStoryItemIds) {
                 StoryViewController.this.liveStoryItemIds = liveStoryItemIds;
@@ -252,6 +259,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     public void onStop() {
         super.onStop();
         EventBus.getDefault().unregister(this);
+        apiService.stopListeningForUpdate();
     }
 
 }

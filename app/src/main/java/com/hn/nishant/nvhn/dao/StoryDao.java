@@ -93,7 +93,6 @@ public class StoryDao {
                 if (shouldAdd) {
                     addDummy(realm);
                 }
-
             }
         }, onSuccess);
     }

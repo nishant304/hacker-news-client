@@ -7,6 +7,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
+import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.util.RealmInteger;
 import com.hn.nishant.nvhn.util.StoryObjPool;
@@ -116,23 +117,29 @@ public class FireBaseImpl implements ApiService {
     }
 
     @Override
-    public void getUpdates(final ResponseListener<List<Long>> responseListener) {
-        firebaseDatabase.child("v0").child("updates").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                HashMap<String,Object> hashMap = (HashMap<String, Object>) dataSnapshot.getValue();
-                List<Long> updates = (List<Long>) hashMap.get("items");
-                if(updates == null){
-                    updates = new ArrayList<Long>();
-                }
-                responseListener.onSuccess(updates);
-            }
+    public void listenForUpdates() {
+        firebaseDatabase.child("v0").child("updates").addValueEventListener(updateEventListener);
+    }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                responseListener.onError(new Exception(databaseError.getMessage()));
+    private ValueEventListener updateEventListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            HashMap<String,Object> hashMap = (HashMap<String, Object>) dataSnapshot.getValue();
+            List<Long> updates = (List<Long>) hashMap.get("items");
+            if(updates == null){
+                updates = new ArrayList<Long>();
             }
-        });
+            StoryDao.updateListener.onSuccess(updates);
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            StoryDao.updateListener.onError(new Exception(databaseError.getMessage()));
+        }
+    };
+
+    public void stopListeningForUpdate(){
+        firebaseDatabase.child("v0").child("updates").removeEventListener(updateEventListener);
     }
 
 }

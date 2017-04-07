@@ -15,6 +15,7 @@ public interface ApiService {
 
     void getStory(long id, ResponseListener<Story> responseListener);
 
-    void getUpdates(ResponseListener<List<Long>> responseListener);
+    void listenForUpdates();
 
+    void stopListeningForUpdate();
 }

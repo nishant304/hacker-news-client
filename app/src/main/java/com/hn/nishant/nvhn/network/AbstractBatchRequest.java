@@ -51,7 +51,7 @@ public abstract class AbstractBatchRequest<T> {
     }
 
     public void start() {
-        for (   ; i < Math.min(reqCount,7); i++) {
+        for (   ; i < Math.min(reqCount,reqCount); i++) {
             placeSingleReq(apiService, resp, i);
         }
     }

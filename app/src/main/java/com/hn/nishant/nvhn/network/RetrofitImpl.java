@@ -42,7 +42,7 @@ public class RetrofitImpl implements ApiService {
     }
 
     @Override
-    public void getStoryIds(final ResponseListener<List<Long>> responseListener) {
+    public void getStoryIds(final ResponseListener<List<Long>> responseListener, String type) {
         Call<List<Long>> call = retorfitApiService.getStoryIds();
         call.enqueue(new Callback<List<Long>>() {
             @Override

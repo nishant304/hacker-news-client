@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ApiService {
 
-    void getStoryIds(ResponseListener<List<Long>> responseListener);
+    void getStoryIds(ResponseListener<List<Long>> responseListener, String type);
 
     void getStory(long id, ResponseListener<Story> responseListener);
 

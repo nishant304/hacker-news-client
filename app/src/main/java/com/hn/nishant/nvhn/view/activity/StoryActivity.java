@@ -8,12 +8,15 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Layout;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.R;
+import com.hn.nishant.nvhn.controller.NewStoryImpl;
 import com.hn.nishant.nvhn.controller.StoryViewController;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
 import com.hn.nishant.nvhn.view.ui.ChangeItemAnimator;
@@ -38,12 +41,15 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private Toolbar toolbar;
 
+    private NewStoryImpl newStoryImpl;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("ahnc");
+        setSupportActionBar(toolbar);
         if (savedInstanceState != null) {
             pos = savedInstanceState.getInt("pos");
         }
@@ -57,6 +63,31 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     protected void onResumeFragments() {
         super.onResumeFragments();
         swipeRefreshLayout.setRefreshing(storyViewController.isLoading());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.story_activity_menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.action_refresh){
+            onRefresh();
+        }else{
+            onNewStorySelected();
+        }
+
+        return true;
+    }
+
+    private  void onNewStorySelected(){
+        if(newStoryImpl == null){
+            newStoryImpl = new NewStoryImpl();
+            storyViewController.setStoryCateogry(newStoryImpl);
+            storyAdapter.setNewData(storyViewController.getStories());
+        }
     }
 
     private void setUpRecyclerView() {

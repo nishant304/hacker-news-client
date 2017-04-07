@@ -36,8 +36,8 @@ public class FireBaseImpl implements ApiService {
     }
 
     @Override
-    public void getStoryIds(final ResponseListener<List<Long>> listener) {
-        firebaseDatabase.child("v0").child("topstories")
+    public void getStoryIds(final ResponseListener<List<Long>> listener, String type) {
+        firebaseDatabase.child("v0").child(type)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -125,6 +125,12 @@ public class FireBaseImpl implements ApiService {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             HashMap<String,Object> hashMap = (HashMap<String, Object>) dataSnapshot.getValue();
+
+            if(hashMap == null){
+                StoryDao.updateListener.onSuccess(new ArrayList<Long>());
+                return;
+            }
+
             List<Long> updates = (List<Long>) hashMap.get("items");
             if(updates == null){
                 updates = new ArrayList<Long>();

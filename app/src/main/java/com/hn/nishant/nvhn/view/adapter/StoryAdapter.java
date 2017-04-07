@@ -41,6 +41,12 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         this.itemList.addChangeListener(this);
     }
 
+    public void setNewData(RealmResults<Story> itemList){
+        this.itemList.removeChangeListener(this);
+        this.itemList = itemList;
+        this.itemList.addChangeListener(this);
+    }
+
     @Override
     public StoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         if (viewType == 2) {

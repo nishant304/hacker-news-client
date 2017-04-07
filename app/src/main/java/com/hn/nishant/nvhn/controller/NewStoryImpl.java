@@ -14,15 +14,16 @@ import io.realm.RealmResults;
  * Created by nishant on 07.04.17.
  */
 
-public class TopStoryImpl implements IStoryCateogry {
+public class NewStoryImpl implements IStoryCateogry {
+
+    @Override
+    public void getLatestStories(ResponseListener<List<Long>> responseListener) {
+        App.getApiService().getStoryIds(responseListener,"newstories");
+    }
 
     @Override
     public RealmResults<Story> getLocalStories() {
         return StoryDao.getStoriesSortedByRank();
     }
 
-    @Override
-    public void getLatestStories(ResponseListener<List<Long>> responseListener) {
-        App.getApiService().getStoryIds(responseListener,"topstories");
-    }
 }

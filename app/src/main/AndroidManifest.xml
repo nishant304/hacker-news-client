@@ -20,6 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.hn.nishant.nvhn.view.activity.CommentsActivty" />
+        <activity android:name=".view.activity.BrowseActivity" />
     </application>
 
 </manifest>

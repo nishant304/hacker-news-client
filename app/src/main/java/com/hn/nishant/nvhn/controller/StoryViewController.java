@@ -83,7 +83,6 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        getLatestStories();
     }
 
     public void setStoryCateogry(IStoryCateogry storyCateogry) {
@@ -164,7 +163,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
             ranks.add(i);
         }
 
-        new StoryBatchRequest(itemToBeFetchedList, ranks,
+        new StoryBatchRequest(itemToBeFetchedList, ranks, storyCateogry.getCategory(),
                 new JobResponseListener(true, itemsToDelList, loadListener)).start();
     }
 
@@ -187,7 +186,8 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
         new Handler().post(new Runnable() {
             @Override
             public void run() {
-                new StoryBatchRequest(req, ranks, new JobResponseListener(false, null, loadListener)).start();
+                new StoryBatchRequest(req, ranks,storyCateogry.getCategory(),
+                        new JobResponseListener(false, null, loadListener)).start();
             }
         });
     }
@@ -240,7 +240,7 @@ public class StoryViewController extends Fragment implements OrderedRealmCollect
 
     @Subscribe
     public void onItemUpdate(UpdateEvent updateEvent){
-        new StoryBatchRequest(updateEvent.getUpdatedItems(), updateEvent.getRanks(),
+        new StoryBatchRequest(updateEvent.getUpdatedItems(), updateEvent.getRanks(),storyCateogry.getCategory(),
                 new JobResponseListener(false, new ArrayList<Integer>(), loadListener)).start();
     }
 

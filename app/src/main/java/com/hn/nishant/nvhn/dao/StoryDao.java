@@ -43,8 +43,8 @@ public class StoryDao {
         }
     }
 
-    public static RealmResults<Story> getStoriesSortedByRank() {
-        return App.getRealm().where(Story.class).equalTo("type", "story").findAllSortedAsync("rank");
+    public static RealmResults<Story> getStoriesSortedByRank(String cateGoryFieldKey) {
+        return App.getRealm().where(Story.class).equalTo("type", "story").equalTo(cateGoryFieldKey,true).findAllSortedAsync("rank");
     }
 
     public static RealmResults<Story> getAllComments(int id) {
@@ -73,7 +73,7 @@ public class StoryDao {
             public void execute(Realm realm) {
                 delData(response, realm);
                 realm.copyToRealmOrUpdate(response);
-                //addDummy(realm);
+                addDummy(realm);
             }
         }, onSuccess);
     }

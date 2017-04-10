@@ -56,6 +56,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe);
         swipeRefreshLayout.setOnRefreshListener(this);
         storyViewController = StoryViewController.getInstance(getFragmentManager());
+        storyViewController.getLatestStories();
         setUpRecyclerView();
     }
 
@@ -148,11 +149,6 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     protected void onDestroy() {
         storyAdapter.onDestroy();
         super.onDestroy();
-    }
-
-    @VisibleForTesting
-    public LinearLayoutManager getLayoutManager() {
-        return layoutManager;
     }
 
 }

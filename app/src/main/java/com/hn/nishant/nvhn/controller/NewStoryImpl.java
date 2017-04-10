@@ -23,7 +23,12 @@ public class NewStoryImpl implements IStoryCateogry {
 
     @Override
     public RealmResults<Story> getLocalStories() {
-        return StoryDao.getStoriesSortedByRank();
+        return StoryDao.getStoriesSortedByRank("newCategory");
+    }
+
+    @Override
+    public String getCategory() {
+        return "newCategory";
     }
 
 }

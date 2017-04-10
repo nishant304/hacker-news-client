@@ -108,6 +108,7 @@ public class FireBaseImpl implements ApiService {
         story.setType((String) hm.get("type"));
         story.setTitle((String) hm.get("title"));
         story.setText((String) hm.get("text"));
+        story.setUrl((String) hm.get("url"));
         Long desc = (Long) hm.get("descendants");
         if (desc != null) {
             story.setDescendants(desc.intValue());

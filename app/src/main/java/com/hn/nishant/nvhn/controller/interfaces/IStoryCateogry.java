@@ -15,4 +15,6 @@ public interface IStoryCateogry {
     void getLatestStories(ResponseListener<List<Long>> responseListener);
 
     RealmResults<Story> getLocalStories();
+
+    String getCategory();
 }

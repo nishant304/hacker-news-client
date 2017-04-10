@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.hn.nishant.nvhn.R;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
+import com.hn.nishant.nvhn.view.activity.BrowseActivity;
 import com.hn.nishant.nvhn.view.activity.CommentsActivty;
 
 import java.util.List;
@@ -107,7 +108,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(v.getContext(), CommentsActivty.class);
+            Intent intent = new Intent(v.getContext(), BrowseActivity.class);
             intent.putExtra("storyId", getItemAtPosition(getAdapterPosition()).getId());
             v.getContext().startActivity(intent);
         }

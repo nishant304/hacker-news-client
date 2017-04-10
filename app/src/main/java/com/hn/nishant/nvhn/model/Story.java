@@ -21,6 +21,15 @@ public class Story extends RealmObject {
     @Expose
     private Integer id;
 
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    private String url;
 
     public void setParent(Long parent) {
         this.parent = parent;
@@ -54,6 +63,27 @@ public class Story extends RealmObject {
 
     @Exclude
     private Integer rank;
+
+    private Boolean topCategory;
+
+    public Boolean getTopCategory() {
+        return topCategory;
+    }
+
+    public void setTopCategory(Boolean topCategory) {
+        this.topCategory = topCategory;
+    }
+
+    public Boolean getNewCategory() {
+        return newCategory;
+    }
+
+    public void setNewCategory(Boolean newCategory) {
+        this.newCategory = newCategory;
+    }
+
+    private Boolean newCategory;
+
 
     public RealmList<RealmInteger> getKid() {
         return kid;

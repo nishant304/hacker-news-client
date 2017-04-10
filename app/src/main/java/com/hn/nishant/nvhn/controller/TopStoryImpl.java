@@ -16,13 +16,20 @@ import io.realm.RealmResults;
 
 public class TopStoryImpl implements IStoryCateogry {
 
+    String category = "topCategory";
+
     @Override
     public RealmResults<Story> getLocalStories() {
-        return StoryDao.getStoriesSortedByRank();
+        return StoryDao.getStoriesSortedByRank(category);
     }
 
     @Override
     public void getLatestStories(ResponseListener<List<Long>> responseListener) {
         App.getApiService().getStoryIds(responseListener,"topstories");
+    }
+
+    @Override
+    public String getCategory() {
+        return category;
     }
 }

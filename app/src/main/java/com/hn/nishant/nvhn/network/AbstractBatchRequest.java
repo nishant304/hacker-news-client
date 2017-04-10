@@ -35,6 +35,8 @@ public abstract class AbstractBatchRequest<T> {
 
     private int i =0;
 
+    static long prevReqTime = 0;
+
     public AbstractBatchRequest(@NonNull JobCompleteListener jobCompleteListener, int reqCount) {
         if (reqCount < 0) {
             throw new IllegalArgumentException("req count should not be less than zero");
@@ -48,6 +50,11 @@ public abstract class AbstractBatchRequest<T> {
         this.jobCompleteListener = jobCompleteListener;
         this.reqCount = reqCount;
         this.reqCompleted = reqCount;
+        if(prevReqTime != 0 && System.currentTimeMillis() - prevReqTime <1000){
+            suggestedReqCount += 5;
+            suggestedReqCount = Math.min(20,suggestedReqCount);
+        }
+        prevReqTime = System.currentTimeMillis();
     }
 
     public void start() {
@@ -96,7 +103,7 @@ public abstract class AbstractBatchRequest<T> {
 
     private void adjustSuggestedReqCount() {
         long duration = System.currentTimeMillis() - startTime;
-        if (duration < 1000) {
+        if (duration < 300) {
             suggestedReqCount++;
         } else {
             suggestedReqCount--;

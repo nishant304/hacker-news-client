@@ -61,7 +61,7 @@ public class CommentsViewController extends Fragment {
             list.add(realmInteger.getValue());
             ranks.add(realmInteger.getValue().intValue());
         }
-        new StoryBatchRequest(list,ranks, new AbstractBatchRequest.JobCompleteListener<Story>() {
+        new StoryBatchRequest(list,ranks,"newCategory", new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
                 StoryDao.addnewData(response,false, new Realm.Transaction.OnSuccess() {

@@ -4,9 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
-import com.hn.nishant.nvhn.model.Story;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +29,7 @@ public abstract class AbstractBatchRequest<T> {
 
     private long startTime;
 
-    private  int reqCompleted ;
+    private  int reqToComplete;
 
     private int i =0;
 
@@ -49,7 +47,7 @@ public abstract class AbstractBatchRequest<T> {
         this.startTime = System.currentTimeMillis();
         this.jobCompleteListener = jobCompleteListener;
         this.reqCount = reqCount;
-        this.reqCompleted = reqCount;
+        this.reqToComplete = reqCount;
         if(prevReqTime != 0 && System.currentTimeMillis() - prevReqTime <1000){
             suggestedReqCount += 5;
             suggestedReqCount = Math.min(20,suggestedReqCount);
@@ -66,13 +64,14 @@ public abstract class AbstractBatchRequest<T> {
     private ResponseListener<T> resp = new ResponseListener<T>() {
         @Override
         public void onSuccess(T t) {
-            reqCompleted--;
+            reqToComplete--;
             if(i< reqCount ){
                 placeSingleReq(apiService, resp, i++);
             }
             onSingleItemFetched(t);
             responses.add(t);
-            if (reqCompleted == 0) {
+            System.out.println("req completed "+reqToComplete);
+            if (reqToComplete == 0) {
                 jobCompleteListener.onJobComplete(responses);
                 adjustSuggestedReqCount();
             }
@@ -80,11 +79,11 @@ public abstract class AbstractBatchRequest<T> {
 
         @Override
         public void onError(Exception ex) {
-            reqCompleted--;
+            reqToComplete--;
             if(i< reqCount ){
                 placeSingleReq(apiService, resp, i++);
             }
-            if (reqCompleted == 0) {
+            if (reqToComplete == 0) {
                 jobCompleteListener.onJobComplete(responses);
                 adjustSuggestedReqCount();
             }
@@ -115,6 +114,24 @@ public abstract class AbstractBatchRequest<T> {
     public static int getSuggestedReqCount() {
         return suggestedReqCount;
     }
+
+    public int getReqCount() {
+        return reqCount;
+    }
+
+    public void setReqCount(int reqCount) {
+        this.reqCount = reqCount;
+    }
+
+    public int getReqToComplete() {
+        return reqToComplete;
+    }
+
+    public void setReqToComplete(int reqToComplete) {
+        this.reqToComplete = reqToComplete;
+    }
+
+
 }
 
 

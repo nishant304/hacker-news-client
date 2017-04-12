@@ -17,6 +17,7 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 /**
  * Created by nishant on 18.03.17.
@@ -48,10 +49,11 @@ public class StoryDao {
     }
 
     public static RealmResults<Story> getAllComments(int id) {
-        return App.getRealm().where(Story.class)
-                .equalTo("type", "comment")
-                .equalTo("parent", Long.valueOf(id))
-                .findAllAsync();
+        String [] fieldName = new String[]{"rank","depth"};
+        Sort [] sort = new Sort[]{Sort.ASCENDING,Sort.ASCENDING};
+        return App.getRealm().where(Story.class).equalTo("type","comment")
+                .equalTo("parent1", Long.valueOf(id))
+                .findAllSortedAsync(fieldName,sort);
     }
 
     public static Story getStoryForId(int id, Realm realm) {

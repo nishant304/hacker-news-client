@@ -9,6 +9,7 @@ import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.AbstractBatchRequest;
+import com.hn.nishant.nvhn.network.CommentsBatchRequest;
 import com.hn.nishant.nvhn.network.StoryBatchRequest;
 import com.hn.nishant.nvhn.util.RealmInteger;
 
@@ -61,7 +62,8 @@ public class CommentsViewController extends Fragment {
             list.add(realmInteger.getValue());
             ranks.add(realmInteger.getValue().intValue());
         }
-        new StoryBatchRequest(list,ranks,"newCategory", new AbstractBatchRequest.JobCompleteListener<Story>() {
+
+        new CommentsBatchRequest(list,new AbstractBatchRequest.JobCompleteListener<Story>() {
             @Override
             public void onJobComplete(List<Story> response) {
                 StoryDao.addnewData(response,false, new Realm.Transaction.OnSuccess() {
@@ -71,7 +73,7 @@ public class CommentsViewController extends Fragment {
                     }
                 });
             }
-        }).start();
+        },story.getId()).start();
     }
 
 }

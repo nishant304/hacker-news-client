@@ -43,6 +43,19 @@ public class Story extends RealmObject {
     @Expose
     private Long parent;
 
+
+    public Long getParent1() {
+        return parent1;
+    }
+
+    public void setParent1(Long parent1) {
+        this.parent1 = parent1;
+    }
+
+    @Expose
+    private Long parent1;
+
+
     @SerializedName("text")
     @Expose
     private String text;
@@ -84,6 +97,15 @@ public class Story extends RealmObject {
 
     private Boolean newCategory;
 
+    private int depth;
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
 
     public RealmList<RealmInteger> getKid() {
         return kid;

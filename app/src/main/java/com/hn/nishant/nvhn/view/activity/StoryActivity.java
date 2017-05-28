@@ -1,29 +1,36 @@
 package com.hn.nishant.nvhn.view.activity;
 
-import android.animation.AnimatorSet;
-import android.animation.ObjectAnimator;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.VisibleForTesting;
+import android.support.customtabs.CustomTabsIntent;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Layout;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
-import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.R;
 import com.hn.nishant.nvhn.controller.NewStoryImpl;
 import com.hn.nishant.nvhn.controller.StoryViewController;
+import com.hn.nishant.nvhn.controller.TopStoryImpl;
+import com.hn.nishant.nvhn.controller.interfaces.IStoryCateogry;
+import com.hn.nishant.nvhn.customtabs.CustomTabActivityHelper;
+import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
 import com.hn.nishant.nvhn.view.ui.ChangeItemAnimator;
 import com.hn.nishant.nvhn.view.ui.LinearLayoutManager;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener,
-        StoryViewController.OnDataLoadListener {
+        StoryViewController.OnDataLoadListener, AdapterView.OnItemClickListener {
 
     private LinearLayoutManager layoutManager;
 
@@ -43,11 +50,26 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private NewStoryImpl newStoryImpl;
 
+    private DrawerLayout drawerLayout;
+
+    private ListView listView;
+
+    private CustomTabActivityHelper customTabActivityHelper;
+
+    private String [] mPlanetTitles = new String[]{"abc","bca"};
+
+    private IStoryCateogry[] storyCateogry = new IStoryCateogry[]{new NewStoryImpl(),new TopStoryImpl()};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        listView = (ListView) findViewById(R.id.left_drawer);
+        listView.setAdapter(new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, mPlanetTitles));
+        listView.setOnItemClickListener(this);
         toolbar.setTitle("ahnc");
         setSupportActionBar(toolbar);
         if (savedInstanceState != null) {
@@ -58,6 +80,21 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         storyViewController = StoryViewController.getInstance(getFragmentManager());
         storyViewController.getLatestStories();
         setUpRecyclerView();
+        customTabActivityHelper = new CustomTabActivityHelper(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        customTabActivityHelper.bindService();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        customTabActivityHelper.unbindService();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -72,6 +109,13 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         return true;
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onStorySelected(Story story){
+        CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
+        intentBuilder.setStartAnimations(this,android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+        customTabActivityHelper.openCustomTab(1, Uri.parse(story.getUrl()), intentBuilder.build());
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.action_refresh){
@@ -81,6 +125,12 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         }
 
         return true;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        storyViewController.setStoryCateogry(storyCateogry[position]);
+        storyAdapter.setNewData(storyViewController.getStories());
     }
 
     private  void onNewStorySelected(){
@@ -102,6 +152,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(storyAdapter);
         recyclerView.setItemAnimator(new ChangeItemAnimator());
+
         layoutManager.scrollToPosition(pos);
     }
 
@@ -138,7 +189,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             int visibleItems = layoutManager.getChildCount();
             int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
             int totalItems = layoutManager.getItemCount();
-            if (dy > 0 && visibleItems + firstVisibleItem + 5 >= totalItems) {
+            if (dy > 0 && visibleItems + firstVisibleItem >= totalItems) {
                 storyViewController.loadMore();
             }
         }

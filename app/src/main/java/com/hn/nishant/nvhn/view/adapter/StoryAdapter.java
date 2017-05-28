@@ -17,6 +17,8 @@ import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.activity.BrowseActivity;
 import com.hn.nishant.nvhn.view.activity.CommentsActivty;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.List;
 
 import io.realm.OrderedCollectionChangeSet;
@@ -104,11 +106,16 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             if (comments != null) {
                 comments.setOnClickListener(this);
             }
+            view.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(v.getContext(), CommentsActivty.class);
+            if(v.getId() == R.id.storyItemView){
+                EventBus.getDefault().post(getItemAtPosition(getAdapterPosition()));
+                return;
+            }
+            Intent intent = new Intent(v.getContext(),CommentsActivty.class);
             intent.putExtra("storyId", getItemAtPosition(getAdapterPosition()).getId());
             v.getContext().startActivity(intent);
         }

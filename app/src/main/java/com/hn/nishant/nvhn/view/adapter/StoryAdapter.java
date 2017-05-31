@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.hn.nishant.nvhn.R;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
+import com.hn.nishant.nvhn.network.FireBaseImpl;
 import com.hn.nishant.nvhn.view.activity.BrowseActivity;
 import com.hn.nishant.nvhn.view.activity.CommentsActivty;
 
@@ -29,7 +30,8 @@ import io.realm.RealmResults;
  * Created by nishant on 15.03.17.
  */
 
-public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder> implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
+public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
+        implements OrderedRealmCollectionChangeListener<RealmResults<Story>> {
 
     private LayoutInflater inflater;
 
@@ -45,7 +47,6 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
     }
 
     public void setNewData(RealmResults<Story> itemList){
-        this.itemList.removeChangeListener(this);
         this.itemList = itemList;
         this.itemList.addChangeListener(this);
     }
@@ -68,7 +69,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         if (payloads.size() == 0) {
             onBindViewHolder(holder, position);
         } else {
-            holder.comments.setText((Integer) payloads.get(0) + " comments");
+            holder.comments.setText((Integer) payloads.get(0) + "");
         }
     }
 
@@ -77,9 +78,11 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         if (holder instanceof ProgressBarHolder) {
             return;
         }
+        Story story = itemList.get(position);
         holder.text.setText(itemList.get(position).getTitle());
-        holder.time.setText("by " + itemList.get(position).getBy());
-        holder.comments.setText(itemList.get(position).getDescendants() + " comments");
+        holder.time.setText(FireBaseImpl.getTimeDiff(story.getTime()) +" ago by " +
+                itemList.get(position).getBy() +" with "+itemList.get(position).getScore()+" points");
+        holder.comments.setText(itemList.get(position).getDescendants()+ "");
     }
 
     @Override

@@ -45,7 +45,11 @@ public class StoryDao {
     }
 
     public static RealmResults<Story> getStoriesSortedByRank(String cateGoryFieldKey) {
-        return App.getRealm().where(Story.class).equalTo("type", "story").equalTo(cateGoryFieldKey,true).findAllSortedAsync("rank");
+        String type = "story";
+        if(cateGoryFieldKey.equals("jobCategory")){
+            type = "job";
+        }
+        return App.getRealm().where(Story.class).equalTo("type", type).equalTo(cateGoryFieldKey,true).findAllSortedAsync("rank");
     }
 
     public static RealmResults<Story> getAllComments(int id) {

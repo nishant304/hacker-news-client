@@ -1,5 +1,8 @@
 package com.hn.nishant.nvhn.view.activity;
 
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
@@ -15,7 +18,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.hn.nishant.nvhn.R;
+import com.hn.nishant.nvhn.controller.AskStoryImpl;
+import com.hn.nishant.nvhn.controller.BestStoryImpl;
+import com.hn.nishant.nvhn.controller.JobStoryImpl;
 import com.hn.nishant.nvhn.controller.NewStoryImpl;
+import com.hn.nishant.nvhn.controller.ShowStoryImpl;
 import com.hn.nishant.nvhn.controller.StoryViewController;
 import com.hn.nishant.nvhn.controller.TopStoryImpl;
 import com.hn.nishant.nvhn.controller.interfaces.IStoryCateogry;
@@ -56,9 +63,11 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     private CustomTabActivityHelper customTabActivityHelper;
 
-    private String [] mPlanetTitles = new String[]{"abc","bca"};
+    private String [] mPlanetTitles = new String[]{"abc","bca","best","show","ask","job"};
 
-    private IStoryCateogry[] storyCateogry = new IStoryCateogry[]{new NewStoryImpl(),new TopStoryImpl()};
+    private IStoryCateogry[] storyCateogry = new IStoryCateogry[]{new NewStoryImpl(),
+            new TopStoryImpl(),new BestStoryImpl(), new ShowStoryImpl(), new AskStoryImpl()
+            , new JobStoryImpl()};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +121,16 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onStorySelected(Story story){
         CustomTabsIntent.Builder intentBuilder = new CustomTabsIntent.Builder();
-        intentBuilder.setStartAnimations(this,android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+        intentBuilder.setStartAnimations(this,R.anim.slide_in_right,R.anim.slide_out_left);
+        intentBuilder.setExitAnimations(this,android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+
+        Intent intent = new Intent(this,CommentsActivty.class);
+        intent.putExtra("storyId", story.getId());
+
+        //intentBuilder.setToolbarColor(R.color.black_overlay);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        intentBuilder.setActionButton(BitmapFactory.decodeResource(getResources(),R.drawable.comments)
+                ,"comments",pendingIntent);
         customTabActivityHelper.openCustomTab(1, Uri.parse(story.getUrl()), intentBuilder.build());
     }
 
@@ -123,7 +141,6 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         }else{
             onNewStorySelected();
         }
-
         return true;
     }
 
@@ -192,8 +209,8 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
             if (dy > 0 && visibleItems + firstVisibleItem >= totalItems) {
                 storyViewController.loadMore();
             }
-        }
 
+        }
     }
 
     @Override

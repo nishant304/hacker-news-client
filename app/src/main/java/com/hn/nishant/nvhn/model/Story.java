@@ -66,7 +66,7 @@ public class Story extends RealmObject {
 
     @SerializedName("time")
     @Expose
-    private Integer time;
+    private Long time;
 
     @SerializedName("type")
     @Expose
@@ -76,6 +76,16 @@ public class Story extends RealmObject {
 
     @Exclude
     private Integer rank;
+
+    public Long getScore() {
+        return score;
+    }
+
+    public void setScore(Long score) {
+        this.score = score;
+    }
+
+    private Long score;
 
     private Boolean topCategory;
 
@@ -96,6 +106,48 @@ public class Story extends RealmObject {
     }
 
     private Boolean newCategory;
+
+    public Boolean getBestCategory() {
+        return bestCategory;
+    }
+
+    public void setBestCategory(Boolean bestCategory) {
+        this.bestCategory = bestCategory;
+    }
+
+    private Boolean bestCategory;
+
+    public Boolean getShowCategory() {
+        return showCategory;
+    }
+
+    public void setShowCategory(Boolean showCategory) {
+        this.showCategory = showCategory;
+    }
+
+    private Boolean showCategory;
+
+    public Boolean getAskCategory() {
+        return askCategory;
+    }
+
+    public void setAskCategory(Boolean askCategory) {
+        this.askCategory = askCategory;
+    }
+
+    private Boolean askCategory;
+
+    public Boolean getJobCategory() {
+        return jobCategory;
+    }
+
+    public void setJobCategory(Boolean jobCategory) {
+        this.jobCategory = jobCategory;
+    }
+
+    private Boolean jobCategory;
+
+
 
     private int depth;
 
@@ -158,11 +210,11 @@ public class Story extends RealmObject {
         this.text = text;
     }
 
-    public Integer getTime() {
+    public Long getTime() {
         return time;
     }
 
-    public void setTime(Integer time) {
+    public void setTime(Long time) {
         this.time = time;
     }
 

@@ -109,6 +109,8 @@ public class FireBaseImpl implements ApiService {
         story.setTitle((String) hm.get("title"));
         story.setText((String) hm.get("text"));
         story.setUrl((String) hm.get("url"));
+        story.setTime((Long) hm.get("time"));
+        story.setScore((Long) hm.get("score"));
         Long desc = (Long) hm.get("descendants");
         if (desc != null) {
             story.setDescendants(desc.intValue());
@@ -147,6 +149,31 @@ public class FireBaseImpl implements ApiService {
 
     public void stopListeningForUpdate(){
         firebaseDatabase.child("v0").child("updates").removeEventListener(updateEventListener);
+    }
+
+    public static String getTimeDiff(long time){
+        long now = System.currentTimeMillis()/1000;
+        long timeDiff = now - time;
+        long min = 60;
+        long hour = 60*min;
+        long day = 24*hour;
+
+        long days = timeDiff/ day;
+        if(days != 0 ){
+            return days + " days";
+        }
+
+        long hours = timeDiff/hour;
+        if(hours != 0){
+            return  hours + " hours";
+        }
+
+        long mins = timeDiff/min;
+        if(mins != 0){
+            return mins +" mins";
+        }
+
+       return "few seconds ago";
     }
 
 }

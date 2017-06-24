@@ -6,8 +6,7 @@
     android:id="@+id/storyItemView"
     android:background="@color/colorPrimary"
     android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:layout_margin="10dp">
+    >
 
     <TextView
         android:id="@+id/article_title"

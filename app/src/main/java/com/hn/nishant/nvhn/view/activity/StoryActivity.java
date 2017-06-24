@@ -3,6 +3,10 @@ package com.hn.nishant.nvhn.view.activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
@@ -10,6 +14,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,6 +32,7 @@ import com.hn.nishant.nvhn.controller.StoryViewController;
 import com.hn.nishant.nvhn.controller.TopStoryImpl;
 import com.hn.nishant.nvhn.controller.interfaces.IStoryCateogry;
 import com.hn.nishant.nvhn.customtabs.CustomTabActivityHelper;
+import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
 import com.hn.nishant.nvhn.view.ui.ChangeItemAnimator;
@@ -169,9 +175,26 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(storyAdapter);
         recyclerView.setItemAnimator(new ChangeItemAnimator());
-
+        //helper.attachToRecyclerView(recyclerView);
         layoutManager.scrollToPosition(pos);
     }
+
+    private Drawable bg = new ColorDrawable(Color.RED);
+
+    private ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT
+    |ItemTouchHelper.RIGHT){
+        @Override
+        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+            makeToast("swiped");
+            int pos = viewHolder.getAdapterPosition();
+        }
+
+        @Override
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+    });
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

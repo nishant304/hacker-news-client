@@ -56,7 +56,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         if (viewType == 2) {
             return new ProgressBarHolder(inflater.inflate(R.layout.progress_layout, parent, false));
         }
-        return new StoryHolder(inflater.inflate(R.layout.story_item_view, parent, false));
+        return new StoryHolder(inflater.inflate(R.layout.drag_item_view, parent, false));
     }
 
     @Override
@@ -100,16 +100,20 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         TextView text;
         TextView time;
         public TextView comments;
+        public View view;
+
+        public View overlay;
 
         StoryHolder(View view) {
             super(view);
+            this.view = view;
             text = (TextView) view.findViewById(R.id.article_title);
             time = (TextView) view.findViewById(R.id.article_time);
             comments = (TextView) view.findViewById(R.id.article_comments);
             if (comments != null) {
                 comments.setOnClickListener(this);
             }
-            view.setOnClickListener(this);
+            //view.setOnClickListener(this);
         }
 
         @Override

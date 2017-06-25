@@ -6,6 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textViewStyle">@style/PrimaryTextStyle</item>
     </style>
 
     <style name="RoboAppTheme" parent="@android:style/Theme.Holo.Light.DarkActionBar">
@@ -24,6 +25,18 @@
 
     <style name="FullscreenActionBarStyle" parent="Widget.AppCompat.ActionBar">
         <item name="android:background">@color/black_overlay</item>
+    </style>
+
+    <style name="PrimaryTextStyle" parent="android:TextAppearance.DeviceDefault.Medium">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:typeface">sans</item>
+    </style>
+
+    <style name="secondaryTextStyle" parent="android:TextAppearance.DeviceDefault.Medium">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/textColorSecondary</item>
+        <item name="android:typeface">sans</item>
     </style>
 
 </resources>

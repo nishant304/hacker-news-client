@@ -175,26 +175,8 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(storyAdapter);
         recyclerView.setItemAnimator(new ChangeItemAnimator());
-        //helper.attachToRecyclerView(recyclerView);
         layoutManager.scrollToPosition(pos);
     }
-
-    private Drawable bg = new ColorDrawable(Color.RED);
-
-    private ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT
-    |ItemTouchHelper.RIGHT){
-        @Override
-        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-            makeToast("swiped");
-            int pos = viewHolder.getAdapterPosition();
-        }
-
-        @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-            return false;
-        }
-
-    });
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

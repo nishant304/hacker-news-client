@@ -5,69 +5,58 @@
     android:layout_width="match_parent"
     android:id="@+id/storyItemView"
     android:background="@color/colorPrimary"
-    android:layout_height="wrap_content"
+    android:layout_height="100dp"
     >
 
     <TextView
         android:id="@+id/article_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:layout_constraintRight_toLeftOf="@+id/guideline"
+        android:layout_marginLeft="10dp"
+        app:layout_constraintRight_toLeftOf="@+id/ivComment"
         app:layout_constraintHorizontal_bias="0.0"
         android:text="title"
+        android:maxLines="2"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintTop_creator="1"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.2"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginStart="10dp" />
 
     <TextView
         android:id="@+id/article_time"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
         android:text="time"
-        app:layout_constraintTop_toBottomOf="@+id/article_title"
-        tools:layout_constraintLeft_creator="1"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        style = "@style/secondaryTextStyle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginStart="10dp" />
 
-    <android.support.constraint.Guideline
+    <com.hn.nishant.nvhn.view.custom.CommentCountView
+        android:id="@+id/ivComment"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/guideline"
-        app:layout_constraintGuide_begin="280dp"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteY="0dp"
-        tools:layout_editor_absoluteX="280dp" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:src="@mipmap/ic_comments"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="@+id/guideline"
-        app:layout_constraintRight_toRightOf="parent"/>
-
-    <TextView
-        android:id="@+id/article_comments"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:textAlignment="center"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintLeft_toLeftOf="@+id/guideline" />
+        app:layout_constraintHorizontal_bias="0.9"
+        />
 
     <TextView
         android:id="@+id/tvPoints"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         tools:text="TextView"
+        style = "@style/secondaryTextStyle"
         app:layout_constraintLeft_toRightOf="@+id/article_time"
         app:layout_constraintTop_toTopOf="@+id/article_time"
         android:layout_marginLeft="5dp"
-         />
+        android:layout_marginStart="5dp" />
 
 </android.support.constraint.ConstraintLayout>

@@ -21,16 +21,16 @@ public class DragView extends FrameLayout {
 
     private int left;
 
-    public DragView(Context context){
-        this(context,null);
+    public DragView(Context context) {
+        this(context, null);
     }
 
-    public DragView(Context context, AttributeSet attributeSet){
+    public DragView(Context context, AttributeSet attributeSet) {
         super(context, attributeSet);
-        viewDragHelper = ViewDragHelper.create(this,1.0f, new ViewDragCallBack() );
+        viewDragHelper = ViewDragHelper.create(this, 1.0f, new ViewDragCallBack());
     }
 
-    public class ViewDragCallBack extends ViewDragHelper.Callback{
+    public class ViewDragCallBack extends ViewDragHelper.Callback {
 
         @Override
         public boolean tryCaptureView(View child, int pointerId) {
@@ -42,15 +42,15 @@ public class DragView extends FrameLayout {
 
             System.out.println("xvel " + xvel);
 
-            int  pos = releasedChild.getPaddingLeft();
-            if(xvel > 0.0f){
-                if(left >  releasedChild.getWidth()/3)
-                pos = releasedChild.getWidth()/3 ;
-            }else{
-                if(left <  -releasedChild.getWidth()/3)
-                pos = -releasedChild.getWidth()/3;
+            int pos = releasedChild.getPaddingLeft();
+            if (xvel > 0.0f) {
+                if (left > releasedChild.getWidth() / 3)
+                    pos = releasedChild.getWidth() / 3;
+            } else {
+                if (left < -releasedChild.getWidth() / 3)
+                    pos = -releasedChild.getWidth() / 3;
             }
-            viewDragHelper.settleCapturedViewAt(pos,releasedChild.getPaddingTop());
+            viewDragHelper.settleCapturedViewAt(pos, releasedChild.getPaddingTop());
             invalidate();
         }
 
@@ -66,16 +66,16 @@ public class DragView extends FrameLayout {
 
         @Override
         public int clampViewPositionHorizontal(View child, int left, int dx) {
-            if(dx < 0){
-                return Math.max(-2*child.getWidth()/3,left+dx);
+            if (dx < 0) {
+                return Math.max(-2 * child.getWidth() / 3, left + dx);
             }
-            return Math.min(2*child.getWidth()/3,left+dx);
+            return Math.min(2 * child.getWidth() / 3, left + dx);
         }
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if(viewDragHelper.shouldInterceptTouchEvent(ev)){
+        if (viewDragHelper.shouldInterceptTouchEvent(ev)) {
             return true;
         }
         return super.onInterceptTouchEvent(ev);
@@ -83,13 +83,16 @@ public class DragView extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP && left > -10 && left < 10) {
+            return super.onTouchEvent(event);
+        }
         viewDragHelper.processTouchEvent(event);
         return true;
     }
 
     @Override
     public void computeScroll() {
-        if(viewDragHelper.continueSettling(true)){
+        if (viewDragHelper.continueSettling(true)) {
             ViewCompat.postInvalidateOnAnimation(this);
         }
     }

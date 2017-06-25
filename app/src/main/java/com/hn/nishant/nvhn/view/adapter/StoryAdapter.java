@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -17,6 +18,7 @@ import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.network.FireBaseImpl;
 import com.hn.nishant.nvhn.view.activity.BrowseActivity;
 import com.hn.nishant.nvhn.view.activity.CommentsActivty;
+import com.hn.nishant.nvhn.view.custom.CommentCountView;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -69,7 +71,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         if (payloads.size() == 0) {
             onBindViewHolder(holder, position);
         } else {
-            holder.comments.setText((Integer) payloads.get(0) + "");
+            holder.commentCountView.setCommentCount((Integer) payloads.get(0));
         }
     }
 
@@ -82,7 +84,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         holder.text.setText(itemList.get(position).getTitle());
         holder.time.setText(FireBaseImpl.getTimeDiff(story.getTime()) +" ago by " +
                 itemList.get(position).getBy() +" with "+itemList.get(position).getScore()+" points");
-        holder.comments.setText(itemList.get(position).getDescendants()+ "");
+        holder.commentCountView.setCommentCount(itemList.get(position).getDescendants());
     }
 
     @Override
@@ -99,25 +101,33 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
         TextView text;
         TextView time;
-        public TextView comments;
+        public CommentCountView commentCountView;
         public View view;
-
-        public View overlay;
+        ImageView shareBtn;
 
         StoryHolder(View view) {
             super(view);
-            this.view = view;
+            commentCountView = (CommentCountView)view.findViewById(R.id.ivComment);
             text = (TextView) view.findViewById(R.id.article_title);
             time = (TextView) view.findViewById(R.id.article_time);
-            comments = (TextView) view.findViewById(R.id.article_comments);
-            if (comments != null) {
-                comments.setOnClickListener(this);
-            }
-            //view.setOnClickListener(this);
+            shareBtn = (ImageView) view.findViewById(R.id.ivShare);
+            shareBtn.setOnClickListener(this);
+            commentCountView.setOnClickListener(this);
+            this.view = view.findViewById(R.id.storyItemView);
+            this.view.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
+            if(v.getId() == R.id.ivShare){
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SEND);
+                intent.putExtra(Intent.EXTRA_TEXT, itemList.get(getAdapterPosition()).getUrl());
+                intent.setType("text/plain");
+                v.getContext().startActivity(intent);
+                return;
+            }
+
             if(v.getId() == R.id.storyItemView){
                 EventBus.getDefault().post(getItemAtPosition(getAdapterPosition()));
                 return;

@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
+import com.hn.nishant.nvhn.view.custom.CommentCountView;
 
 import java.util.List;
 
@@ -42,9 +43,9 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
     @Override
     public ItemHolderInfo recordPostLayoutInformation(@NonNull RecyclerView.State state, @NonNull RecyclerView.ViewHolder viewHolder) {
         CommentsInfo commentsInfo = (CommentsInfo) super.recordPostLayoutInformation(state, viewHolder);
-        TextView comment =  ((StoryAdapter.StoryHolder) viewHolder).comments;
+        CommentCountView comment =  ((StoryAdapter.StoryHolder) viewHolder).commentCountView;
         if(comment != null) {
-            commentsInfo.commentText =  comment.getText().toString();
+            commentsInfo.commentText =  comment.getCount();
         }
         return commentsInfo;
     }
@@ -53,9 +54,9 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
     @Override
     public ItemHolderInfo recordPreLayoutInformation(@NonNull RecyclerView.State state, @NonNull RecyclerView.ViewHolder viewHolder, int changeFlags, @NonNull List<Object> payloads) {
         CommentsInfo commentsInfo = (CommentsInfo) super.recordPreLayoutInformation(state, viewHolder, changeFlags, payloads);
-        TextView comment =  ((StoryAdapter.StoryHolder) viewHolder).comments;
+        CommentCountView comment =  ((StoryAdapter.StoryHolder) viewHolder).commentCountView;
         if(comment != null) {
-            commentsInfo.commentText =  comment.getText().toString();
+            commentsInfo.commentText =  comment.getCount();
         }
         return commentsInfo;
     }
@@ -67,13 +68,16 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
         }
 
         final StoryAdapter.StoryHolder storyHolder = (StoryAdapter.StoryHolder) newHolder;
-        ObjectAnimator normalToReverseAnim = ObjectAnimator.ofFloat(storyHolder.comments, View.ROTATION_X, 0, 90);
+
+
+        ObjectAnimator normalToReverseAnim = ObjectAnimator.ofInt(storyHolder.commentCountView,
+                "alpha", 20, 1);
         normalToReverseAnim.setInterpolator(interPolator);
         normalToReverseAnim.setDuration(DEFAULT_ANIM_DURATION);
 
-        final String newText = ((CommentsInfo) postInfo).commentText;
-        String oldText = ((CommentsInfo) preInfo).commentText;
-        ((StoryAdapter.StoryHolder) newHolder).comments.setText(oldText);
+        final int newText = ((CommentsInfo) postInfo).commentText;
+        int oldText = ((CommentsInfo) preInfo).commentText;
+        ((StoryAdapter.StoryHolder) newHolder).commentCountView.setCommentCount(oldText);
 
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.play(normalToReverseAnim);
@@ -85,8 +89,8 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                ((StoryAdapter.StoryHolder) newHolder).comments.setText(newText);
-                playReverseToNormalAnim(storyHolder.comments,newHolder);
+                ((StoryAdapter.StoryHolder) newHolder).commentCountView.setCommentCount(newText);
+                playReverseToNormalAnim(storyHolder.commentCountView,newHolder);
             }
 
             @Override
@@ -103,8 +107,8 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
         return true;
     }
 
-    private void playReverseToNormalAnim(TextView comments, final RecyclerView.ViewHolder viewHolder){
-        ObjectAnimator reverseToDefault = ObjectAnimator.ofFloat(comments, View.ROTATION_X, 90, 0);
+    private void playReverseToNormalAnim(final CommentCountView comments, final RecyclerView.ViewHolder viewHolder){
+        ObjectAnimator reverseToDefault = ObjectAnimator.ofInt(comments, "alpha", 1, 20);
         reverseToDefault.setInterpolator(interPolator);
         reverseToDefault.setDuration(DEFAULT_ANIM_DURATION);
 
@@ -135,7 +139,7 @@ public class ChangeItemAnimator extends DefaultItemAnimator {
     }
 
     private static class CommentsInfo extends ItemHolderInfo {
-        String commentText = "";
+        int commentText ;
     }
 
 }

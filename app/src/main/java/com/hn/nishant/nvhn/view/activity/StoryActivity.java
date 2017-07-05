@@ -10,9 +10,11 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.customtabs.CustomTabsIntent;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
@@ -35,6 +37,7 @@ import com.hn.nishant.nvhn.customtabs.CustomTabActivityHelper;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
 import com.hn.nishant.nvhn.view.adapter.StoryAdapter;
+import com.hn.nishant.nvhn.view.fragments.UserDetailFragment;
 import com.hn.nishant.nvhn.view.ui.ChangeItemAnimator;
 import com.hn.nishant.nvhn.view.ui.LinearLayoutManager;
 
@@ -121,6 +124,21 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.story_activity_menu,menu);
+        MenuItem menuItem = menu.findItem(R.id.search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                makeToast(newText);
+                return true;
+            }
+        });
+
         return true;
     }
 
@@ -138,6 +156,17 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         intentBuilder.setActionButton(BitmapFactory.decodeResource(getResources(),R.drawable.comments)
                 ,"comments",pendingIntent);
         customTabActivityHelper.openCustomTab(1, Uri.parse(story.getUrl()), intentBuilder.build());
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onUserSelected(String userID) {
+        drawerLayout.removeAllViews();
+        UserDetailFragment userDetailFragment = new UserDetailFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("userId",userID);
+        userDetailFragment.setArguments(bundle);
+        getSupportFragmentManager()
+                .beginTransaction().add(R.id.drawer_layout,userDetailFragment).commit();
     }
 
     @Override
@@ -203,6 +232,7 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
         swipeRefreshLayout.setRefreshing(false);
         makeToast(ex.getMessage());
     }
+
 
     private class ScrollListener extends RecyclerView.OnScrollListener {
 

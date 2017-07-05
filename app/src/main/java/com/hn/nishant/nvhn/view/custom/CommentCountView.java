@@ -19,8 +19,6 @@ import com.hn.nishant.nvhn.R;
 
 public class CommentCountView extends ImageView {
 
-    private Bitmap bitmap;
-
     public int getCount() {
         return count;
     }
@@ -63,7 +61,6 @@ public class CommentCountView extends ImageView {
 
     public void setAlpha(int alpha){
         this.alpha = alpha;
-        System.out.println("new alpha" + alpha);
         invalidate();
     }
 

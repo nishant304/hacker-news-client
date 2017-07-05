@@ -12,6 +12,10 @@ android {
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    dataBinding{
+        enabled = true
+    }
     buildTypes {
         release {
             minifyEnabled true
@@ -49,6 +53,10 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.2.0'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:customtabs:25.3.1'
+    compile "android.arch.lifecycle:runtime:1.0.0-alpha3"
+    compile "android.arch.lifecycle:extensions:1.0.0-alpha3"
+    annotationProcessor "android.arch.lifecycle:compiler:1.0.0-alpha3"
+
 
 
     testCompile 'org.robolectric:robolectric:3.3.1'

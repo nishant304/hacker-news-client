@@ -9,14 +9,17 @@ import com.hn.nishant.nvhn.App;
 import com.hn.nishant.nvhn.api.ApiService;
 import com.hn.nishant.nvhn.dao.StoryDao;
 import com.hn.nishant.nvhn.model.Story;
+import com.hn.nishant.nvhn.model.User;
 import com.hn.nishant.nvhn.util.RealmInteger;
 import com.hn.nishant.nvhn.util.StoryObjPool;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import io.realm.RealmList;
+import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
 
 /**
  * Created by nishant on 16.03.17.
@@ -97,7 +100,7 @@ public class FireBaseImpl implements ApiService {
     }
 
     /***
-     *  Avoid gson parsing on ui thread
+     *  Avoid gson parsing on ui thread, performance fix
      * @param hm
      * @return
      */
@@ -149,6 +152,27 @@ public class FireBaseImpl implements ApiService {
 
     public void stopListeningForUpdate(){
         firebaseDatabase.child("v0").child("updates").removeEventListener(updateEventListener);
+    }
+
+    @Override
+    public Observable<User> getUserDetail(final String userId) {
+       return  Observable.create(new Observable.OnSubscribe<User>() {
+            @Override
+            public void call(final Subscriber<? super User> subscriber) {
+                firebaseDatabase.child("v0").child("user").child(userId).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        subscriber.onNext(dataSnapshot.getValue(User.class));
+                        subscriber.onCompleted();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        subscriber.onError(new Exception(databaseError.getMessage()));
+                    }
+                });
+            }
+        });
     }
 
     public static String getTimeDiff(long time){

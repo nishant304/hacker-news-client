@@ -14,4 +14,10 @@
         android:title="new stories"
         app:showAsAction="never" />
 
+    <item android:id="@+id/search"
+        android:title="search"
+        android:icon="@android:drawable/ic_menu_search"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="android.support.v7.widget.SearchView" />
+
 </menu>

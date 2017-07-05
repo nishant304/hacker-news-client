@@ -104,6 +104,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
         public CommentCountView commentCountView;
         public View view;
         ImageView shareBtn;
+        ImageView userDetailBtn;
 
         StoryHolder(View view) {
             super(view);
@@ -111,6 +112,8 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
             text = (TextView) view.findViewById(R.id.article_title);
             time = (TextView) view.findViewById(R.id.article_time);
             shareBtn = (ImageView) view.findViewById(R.id.ivShare);
+            userDetailBtn = (ImageView) view.findViewById(R.id.ivUpVote);
+            userDetailBtn.setOnClickListener(this);
             shareBtn.setOnClickListener(this);
             commentCountView.setOnClickListener(this);
             this.view = view.findViewById(R.id.storyItemView);
@@ -130,6 +133,11 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryHolder>
 
             if(v.getId() == R.id.storyItemView){
                 EventBus.getDefault().post(getItemAtPosition(getAdapterPosition()));
+                return;
+            }
+
+            if(v.getId() == R.id.ivUpVote){
+                EventBus.getDefault().post(getItemAtPosition(getAdapterPosition()).getBy());
                 return;
             }
             Intent intent = new Intent(v.getContext(),CommentsActivty.class);

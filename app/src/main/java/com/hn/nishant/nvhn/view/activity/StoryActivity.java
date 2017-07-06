@@ -160,13 +160,9 @@ public class StoryActivity extends BaseActivity implements SwipeRefreshLayout.On
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onUserSelected(String userID) {
-        drawerLayout.removeAllViews();
-        UserDetailFragment userDetailFragment = new UserDetailFragment();
-        Bundle bundle = new Bundle();
-        bundle.putString("userId",userID);
-        userDetailFragment.setArguments(bundle);
-        getSupportFragmentManager()
-                .beginTransaction().add(R.id.drawer_layout,userDetailFragment).commit();
+        Intent intent = new Intent(this,UserDetailActivity.class);
+        intent.putExtra("userId",userID);
+        startActivity(intent);
     }
 
     @Override

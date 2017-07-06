@@ -8,13 +8,18 @@
 
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_margin="20dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:drawablePadding="10dp"
             android:layout_margin="10dp"
+            android:gravity="center|left"
+            android:drawableLeft="@drawable/ic_person_outline"
             android:text="@{user.id}" />
 
         <TextView
@@ -22,6 +27,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
+            android:gravity="center|left"
+            android:drawablePadding="10dp"
+            style="@style/secondaryTextStyle"
+            android:drawableLeft="@drawable/ic_access_time"
+            android:text="@{user.created.toString()}"
              />
 
         <TextView
@@ -29,13 +39,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
+            android:drawablePadding="10dp"
+            style="@style/secondaryTextStyle"
+            android:gravity="center|left"
+            android:drawableLeft="@drawable/ic_cake_black_24dp"
+            android:text="@{user.karma.toString()}"
              />
 
         <TextView
             android:id="@+id/tvAbout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            style="@style/secondaryTextStyle"
             android:layout_margin="10dp"
+            android:drawablePadding="10dp"
+            android:drawableStart="@drawable/ic_info"
             android:text="@{user.about}" />
     </LinearLayout>
 

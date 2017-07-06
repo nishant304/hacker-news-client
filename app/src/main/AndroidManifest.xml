@@ -22,6 +22,7 @@
         </activity>
         <activity android:name=".view.activity.CommentsActivty" />
         <activity android:name=".view.activity.BrowseActivity" />
+        <activity android:name=".view.activity.UserDetailActivity" />
     </application>
 
 </manifest>
